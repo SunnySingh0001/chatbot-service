@@ -1,0 +1,1180 @@
+{
+  "timestamp": "2026-11-17T06:22:17.274389+00:00",
+  "flags": {
+    "chunking_mode": "section",
+    "hybrid_search": false,
+    "reranker": false,
+    "query_rewrite": false,
+    "grader": false,
+    "orchestrator": "langgraph"
+  },
+  "metrics": {
+    "total_cases": 65,
+    "positive_cases": 35,
+    "negative_cases": 20,
+    "top_1_accuracy_pct": 100.0,
+    "top_3_recall_pct": 100.0,
+    "correct_no_context_rate_pct": 0.0,
+    "access_leaks": 20,
+    "avg_retrieval_latency_ms": 2486.66
+  },
+  "cases": [
+    {
+      "case_id": "single_01",
+      "category": "single_turn",
+      "question": "How many paid leave days are full-time employees entitled to per year?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8716,
+      "latency_ms": 14056.51,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_02",
+      "category": "single_turn",
+      "question": "What are the complexity and length requirements for corporate passwords?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8614,
+      "latency_ms": 5232.2,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_03",
+      "category": "single_turn",
+      "question": "What is the notice period requirement for confirmed employees under company policy?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8655,
+      "latency_ms": 6074.03,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_04",
+      "category": "single_turn",
+      "question": "What is the daily maximum allowance for domestic business travel meals?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8631,
+      "latency_ms": 3122.84,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_05",
+      "category": "single_turn",
+      "question": "Which VPN client software must be active when working outside the office?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.881,
+      "latency_ms": 2160.81,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_06",
+      "category": "single_turn",
+      "question": "What is the reporting timeframe if a company laptop is lost or stolen?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8704,
+      "latency_ms": 2903.05,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_07",
+      "category": "single_turn",
+      "question": "How many days per week are employees permitted to work from home?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8747,
+      "latency_ms": 2429.79,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_08",
+      "category": "single_turn",
+      "question": "What are the mandatory core working hours on Slack during the day?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8734,
+      "latency_ms": 2186.99,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_09",
+      "category": "single_turn",
+      "question": "How many annual sick leave days are provided before requiring a medical certificate?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8655,
+      "latency_ms": 1977.16,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_10",
+      "category": "single_turn",
+      "question": "Where is the physical IT support walk-in desk located in the office?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8051,
+      "latency_ms": 1869.06,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_11",
+      "category": "single_turn",
+      "question": "VPN",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.856,
+      "latency_ms": 1962.19,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_12",
+      "category": "single_turn",
+      "question": "SLA P1",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8305,
+      "latency_ms": 2544.82,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_13",
+      "category": "single_turn",
+      "question": "P2 SLA",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8346,
+      "latency_ms": 4492.46,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_14",
+      "category": "single_turn",
+      "question": "Section 4.2",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8342,
+      "latency_ms": 2303.09,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_15",
+      "category": "single_turn",
+      "question": "Bitwarden",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.7715,
+      "latency_ms": 2493.42,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_16",
+      "category": "single_turn",
+      "question": "lev policy",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8043,
+      "latency_ms": 2922.43,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_17",
+      "category": "single_turn",
+      "question": "pasword requirments",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8386,
+      "latency_ms": 2934.55,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_18",
+      "category": "single_turn",
+      "question": "globelprotect vpn",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8605,
+      "latency_ms": 2427.04,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_19",
+      "category": "single_turn",
+      "question": "notce perod duraton",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7944,
+      "latency_ms": 2352.44,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "single_20",
+      "category": "single_turn",
+      "question": "probaton perod",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8126,
+      "latency_ms": 2361.27,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_01",
+      "category": "multi_turn",
+      "question": "Can I carry them forward?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.79,
+      "latency_ms": 2135.79,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_02",
+      "category": "multi_turn",
+      "question": "Can I work from home during this time?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.881,
+      "latency_ms": 1971.34,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_03",
+      "category": "multi_turn",
+      "question": "What is the notice period if I decide to resign during it?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8775,
+      "latency_ms": 1814.19,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_04",
+      "category": "multi_turn",
+      "question": "If it gets stolen while traveling, how quickly must I report it?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8625,
+      "latency_ms": 2518.04,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_05",
+      "category": "multi_turn",
+      "question": "Which client application do I need to connect to it?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8195,
+      "latency_ms": 1864.48,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_06",
+      "category": "multi_turn",
+      "question": "How often do they expire and need rotation?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8009,
+      "latency_ms": 1995.61,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_07",
+      "category": "multi_turn",
+      "question": "What is the turnaround SLA for priority 1 tickets?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8428,
+      "latency_ms": 1843.05,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_08",
+      "category": "multi_turn",
+      "question": "What is the maximum daily reimbursement limit for meals?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8592,
+      "latency_ms": 1793.09,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_09",
+      "category": "multi_turn",
+      "question": "When is a doctor medical certificate required for it?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8077,
+      "latency_ms": 2390.94,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_10",
+      "category": "multi_turn",
+      "question": "What is the notice period rule under Section 4.2?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8612,
+      "latency_ms": 1856.32,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_11",
+      "category": "multi_turn",
+      "question": "Can I reuse any of my previous five passwords in it?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8494,
+      "latency_ms": 1932.71,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_12",
+      "category": "multi_turn",
+      "question": "Are home internet or equipment expenses covered under it?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.829,
+      "latency_ms": 2045.68,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_13",
+      "category": "multi_turn",
+      "question": "What happens if unauthorized tools are detected during MDM sync?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8332,
+      "latency_ms": 2053.18,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_14",
+      "category": "multi_turn",
+      "question": "How many minutes of inactivity triggers the screen lock?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8508,
+      "latency_ms": 2259.09,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "multi_15",
+      "category": "multi_turn",
+      "question": "What is the submission deadline in days for filing them?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7979,
+      "latency_ms": 1935.1,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false
+    },
+    {
+      "case_id": "neg_hard_01",
+      "category": "hard_negative",
+      "question": "What is the policy for paid maternity leave, paternity leave, or child adoption?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8129,
+      "latency_ms": 2036.9,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_02",
+      "category": "hard_negative",
+      "question": "Does Acme Corp reimburse gym memberships, fitness passes, or wellness stipends?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8334,
+      "latency_ms": 1800.46,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_03",
+      "category": "hard_negative",
+      "question": "What is the vesting schedule and cliff period for employee stock options (ESOP)?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7922,
+      "latency_ms": 2454.28,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_04",
+      "category": "hard_negative",
+      "question": "Does the office pet policy permit bringing dogs or domestic cats to work?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.806,
+      "latency_ms": 2234.83,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_05",
+      "category": "hard_negative",
+      "question": "Can an employee apply for an unpaid sabbatical leave after 5 years of tenure?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8574,
+      "latency_ms": 2621.86,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_06",
+      "category": "hard_negative",
+      "question": "Does Acme Corp provide company car lease schemes or monthly fuel reimbursements?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8097,
+      "latency_ms": 2359.2,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_07",
+      "category": "hard_negative",
+      "question": "What is the annual tuition assistance reimbursement limit for higher education?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.801,
+      "latency_ms": 2056.76,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_08",
+      "category": "hard_negative",
+      "question": "What are the compliance rules regarding moonlighting and secondary freelancing jobs?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7931,
+      "latency_ms": 1879.94,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_09",
+      "category": "hard_negative",
+      "question": "Does the corporate office provide an on-site creche or childcare facility for parents?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7769,
+      "latency_ms": 2206.52,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_hard_10",
+      "category": "hard_negative",
+      "question": "What is the relocation allowance package provided for interstate transfers?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7657,
+      "latency_ms": 2094.8,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_01",
+      "category": "easy_negative",
+      "question": "What is the authentic recipe for baking chocolate brownies with roasted walnuts?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7633,
+      "latency_ms": 2346.04,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_02",
+      "category": "easy_negative",
+      "question": "Which cricket team won the ICC Cricket World Cup in 2023?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.719,
+      "latency_ms": 1874.01,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_03",
+      "category": "easy_negative",
+      "question": "Write a four-line rhyming poem about golden autumn leaves in the park.",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7534,
+      "latency_ms": 2350.52,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_04",
+      "category": "easy_negative",
+      "question": "What is the official capital city of Australia?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7209,
+      "latency_ms": 1973.84,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_05",
+      "category": "easy_negative",
+      "question": "How do I patch a punctured bicycle tire at home with a repair kit?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7915,
+      "latency_ms": 2065.46,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_06",
+      "category": "easy_negative",
+      "question": "State Newton's third law of motion with a real-world example.",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.765,
+      "latency_ms": 1869.75,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_07",
+      "category": "easy_negative",
+      "question": "Suggest five top-rated science fiction films produced in the 2010s.",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7484,
+      "latency_ms": 2391.05,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_08",
+      "category": "easy_negative",
+      "question": "Explain how chloroplasts and chlorophyll convert solar energy in photosynthesis.",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7876,
+      "latency_ms": 1985.59,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_09",
+      "category": "easy_negative",
+      "question": "What is the boiling point temperature of liquid nitrogen at atmospheric pressure?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7626,
+      "latency_ms": 1847.84,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "neg_easy_10",
+      "category": "easy_negative",
+      "question": "Tell me a short witty joke about software debugging and coffee.",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8123,
+      "latency_ms": 2281.21,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": true
+    },
+    {
+      "case_id": "access_01",
+      "category": "access",
+      "question": "What are the official salary bands and annual CTC ranges for L1 to L3?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7862,
+      "latency_ms": 1819.71,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_02",
+      "category": "access",
+      "question": "What is the annual CTC compensation range for an L6 Director level?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.789,
+      "latency_ms": 2149.1,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_03",
+      "category": "access",
+      "question": "What bonus percentage of CTC is disbursed for Meets Expectations rating?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7509,
+      "latency_ms": 1990.37,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_04",
+      "category": "access",
+      "question": "What bonus percentage of CTC is awarded for Outstanding performance rating?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7484,
+      "latency_ms": 2101.97,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_05",
+      "category": "access",
+      "question": "What are the tenure and review cycle criteria for L1 to L2 promotion?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7946,
+      "latency_ms": 2117.05,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_06",
+      "category": "access",
+      "question": "How do bi-annual performance appraisal ratings determine hike percentages?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7768,
+      "latency_ms": 1714.19,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_07",
+      "category": "access",
+      "question": "What total percentage of company payroll is set aside for the annual bonus pool?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7765,
+      "latency_ms": 2060.42,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_08",
+      "category": "access",
+      "question": "What is the minimum tenure requirement at L2 before becoming eligible for L3?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7933,
+      "latency_ms": 1745.37,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_09",
+      "category": "access",
+      "question": "Which performance review rating is reserved exclusively for the top 5 percent cohort?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7686,
+      "latency_ms": 2258.76,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    },
+    {
+      "case_id": "access_10",
+      "category": "access",
+      "question": "Can an employee on an active Performance Improvement Plan (PIP) receive an annual bonus?",
+      "role": "employee",
+      "expected_sources": [],
+      "retrieved_sources": [
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8187,
+      "latency_ms": 1730.39,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false
+    }
+  ]
+}

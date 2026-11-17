@@ -1,0 +1,29 @@
+# Secrets and configuration
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# Virtual environment and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local vector store data (ingested inside image or mounted)
+chroma_db/
+
+# Tests & IDE files
+tests/
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/

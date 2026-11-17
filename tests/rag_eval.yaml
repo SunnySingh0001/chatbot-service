@@ -1,0 +1,711 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# RAG RETRIEVAL & ACCESS CONTROL BENCHMARK EVALUATION SUITE
+# Total Cases: 75
+# Categories:
+#   - single_turn (20 cases: keywords, typos, fact questions with expected_phrase)
+#   - multi_turn (20 cases: 15 English + 5 Hinglish follow-ups with NO topic words)
+#   - ambiguous (5 cases: cross-document section collisions like Section 4.2)
+#   - hard_negative (10 unanswerable out-of-scope company queries)
+#   - easy_negative (10 off-topic queries)
+#   - access (10 RBAC authorization tests: employee querying HR docs)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (a) 20 Single-Turn Questions (Facts, Keywords, Typos)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "single_01"
+  category: "single_turn"
+  role: "employee"
+  question: "How many paid leave days are full-time employees entitled to per year?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "15 paid leave (PL) days"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_02"
+  category: "single_turn"
+  role: "employee"
+  question: "What are the complexity and length requirements for corporate passwords?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "at least 12 characters"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_03"
+  category: "single_turn"
+  role: "employee"
+  question: "Can a new hire work from home during their initial 90-day probation period?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "WFH is not available during the first"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_04"
+  category: "single_turn"
+  role: "employee"
+  question: "What is the notice period duration for confirmed employees who resign?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "60 days for confirmed staff"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_05"
+  category: "single_turn"
+  role: "employee"
+  question: "How many days of sick leave are allowed per year and when is a medical certificate required?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "medical certificate is required"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_06"
+  category: "single_turn"
+  role: "employee"
+  question: "What is the company reimbursement limit for domestic travel meals per day?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "up to ₹1,500 per day"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_07"
+  category: "single_turn"
+  role: "employee"
+  question: "Which VPN client software must employees use when accessing internal systems remotely?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "GlobalProtect"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_08"
+  category: "single_turn"
+  role: "employee"
+  question: "What full-disk encryption tool must be enabled on Windows company laptops?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "BitLocker on Windows"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_09"
+  category: "single_turn"
+  role: "employee"
+  question: "What is the guaranteed response time SLA for a P1 critical outage ticket?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "2 hours SLA"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_10"
+  category: "single_turn"
+  role: "employee"
+  question: "What is the response time guarantee for SLA P2 major impact helpdesk tickets?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "4 hours SLA"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_11"
+  category: "single_turn"
+  role: "employee"
+  question: "What password manager is approved by IT for storing and sharing corporate credentials?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "Bitwarden for Teams"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_12"
+  category: "single_turn"
+  role: "employee"
+  question: "How quickly will IT remotely wipe a lost or stolen company laptop after it is reported?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "remotely wipe the device"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_13"
+  category: "single_turn"
+  role: "employee"
+  question: "How many days of unused paid leave can be carried forward into the next calendar year?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "10 days max"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_14"
+  category: "single_turn"
+  role: "employee"
+  question: "What are the core working hours during which employees must remain reachable on Slack?"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "10 AM – 4 PM IST"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_15"
+  category: "single_turn"
+  role: "employee"
+  question: "Where should an employee submit a request for software installation approval?"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "it.acmecorp.example/request"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_16"
+  category: "single_turn"
+  role: "employee"
+  question: "VPN"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "GlobalProtect"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_17"
+  category: "single_turn"
+  role: "employee"
+  question: "SLA P1"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "2 hours SLA"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_18"
+  category: "single_turn"
+  role: "employee"
+  question: "Section 2.3"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "2 days per week"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_19"
+  category: "single_turn"
+  role: "employee"
+  question: "pasword requirments"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "at least 12 characters"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "single_20"
+  category: "single_turn"
+  role: "employee"
+  question: "probaton perod"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "90-day probation period"
+  forbidden_sources: ["hr_benefits.md"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (b) 20 Multi-Turn Cases (Follow-up query alone has NO topic words)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "multi_01"
+  category: "multi_turn"
+  role: "employee"
+  question: "Can I carry them forward?"
+  history:
+    - role: "user"
+      content: "What is the paid leave policy at Acme Corp?"
+    - role: "assistant"
+      content: "Full-time employees receive 15 paid leave (PL) days per calendar year."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "10 days max"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_02"
+  category: "multi_turn"
+  role: "employee"
+  question: "Can we do it remotely during this time?"
+  history:
+    - role: "user"
+      content: "How long is the initial probation period for new hires?"
+    - role: "assistant"
+      content: "All new hires undergo an initial 90-day probation period."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "WFH is not available during the first"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_03"
+  category: "multi_turn"
+  role: "employee"
+  question: "what about the notice?"
+  history:
+    - role: "user"
+      content: "What are the rules if someone resigns during probation?"
+    - role: "assistant"
+      content: "Probationers may be let go or resign per company policy."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "notice is 15 days"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_04"
+  category: "multi_turn"
+  role: "employee"
+  question: "If it gets stolen, how quickly must I report it?"
+  history:
+    - role: "user"
+      content: "What are the security rules for corporate laptops?"
+    - role: "assistant"
+      content: "Company laptops must have BitLocker or FileVault full-disk encryption enabled."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "remotely wipe the device"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_05"
+  category: "multi_turn"
+  role: "employee"
+  question: "Which client application is required?"
+  history:
+    - role: "user"
+      content: "Do I have to use corporate VPN when working outside the office?"
+    - role: "assistant"
+      content: "Yes, corporate VPN is mandatory when accessing internal tools remotely."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "GlobalProtect"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_06"
+  category: "multi_turn"
+  role: "employee"
+  question: "How often do they expire?"
+  history:
+    - role: "user"
+      content: "What are the rules for corporate passwords?"
+    - role: "assistant"
+      content: "Passwords must be at least 12 characters with uppercase, lowercase, numbers, and symbols."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "prompt you automatically"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_07"
+  category: "multi_turn"
+  role: "employee"
+  question: "What is the response time for P1?"
+  history:
+    - role: "user"
+      content: "What is the IT helpdesk ticket response policy?"
+    - role: "assistant"
+      content: "Support tickets are prioritized by severity code."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "2 hours SLA"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_08"
+  category: "multi_turn"
+  role: "employee"
+  question: "What is the daily allowance limit for meals?"
+  history:
+    - role: "user"
+      content: "What is the maximum reimbursement for business travel?"
+    - role: "assistant"
+      content: "Domestic travel business expenses are submitted via the finance portal."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "up to ₹1,500 per day"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_09"
+  category: "multi_turn"
+  role: "employee"
+  question: "How many days per week are permitted?"
+  history:
+    - role: "user"
+      content: "How does the work from home policy operate?"
+    - role: "assistant"
+      content: "WFH is permitted subject to manager approval."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "2 days per week"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_10"
+  category: "multi_turn"
+  role: "employee"
+  question: "Where can I submit a request for it?"
+  history:
+    - role: "user"
+      content: "Can I install developer software on my laptop?"
+    - role: "assistant"
+      content: "Only IT-approved software requested via the helpdesk may be installed."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "it.acmecorp.example/request"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_11"
+  category: "multi_turn"
+  role: "employee"
+  question: "Which tool is approved for storing them?"
+  history:
+    - role: "user"
+      content: "What are the rules for keeping corporate passwords secure?"
+    - role: "assistant"
+      content: "Employees must never share corporate passwords."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "Bitwarden for Teams"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_12"
+  category: "multi_turn"
+  role: "employee"
+  question: "And for more than 3 consecutive days?"
+  history:
+    - role: "user"
+      content: "What are the rules regarding annual sick leave?"
+    - role: "assistant"
+      content: "Employees are allocated 7 sick leave days each calendar year."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "medical certificate is required"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_13"
+  category: "multi_turn"
+  role: "employee"
+  question: "How many minutes of inactivity?"
+  history:
+    - role: "user"
+      content: "What are the laptop display lock settings?"
+    - role: "assistant"
+      content: "All corporate laptops must enable automatic screen lock."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "5 minutes of inactivity"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_14"
+  category: "multi_turn"
+  role: "employee"
+  question: "Where must they be submitted?"
+  history:
+    - role: "user"
+      content: "How do I claim reimbursement for business travel receipts?"
+    - role: "assistant"
+      content: "Submit your travel claims within 30 days."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "submitted through the finance portal"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_15"
+  category: "multi_turn"
+  role: "employee"
+  question: "Where should an employee report it?"
+  history:
+    - role: "user"
+      content: "What is the policy against harassment and discrimination?"
+    - role: "assistant"
+      content: "Acme Corp strictly prohibits harassment and workplace violence."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "hr@acmecorp.example"
+  forbidden_sources: ["hr_benefits.md"]
+
+# 5 Hinglish Multi-Turn Cases (16 to 20)
+- id: "multi_16"
+  category: "multi_turn"
+  role: "employee"
+  question: "kitne din aage le ja sakte hain?"
+  history:
+    - role: "user"
+      content: "Acme Corp me har saal kitni paid leave milti hain?"
+    - role: "assistant"
+      content: "Full-time staff ko 15 paid leave (PL) milti hain."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "10 days max"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_17"
+  category: "multi_turn"
+  role: "employee"
+  question: "core hours kya hote hain?"
+  history:
+    - role: "user"
+      content: "Ghar se kaam karte waqt Slack par online rehna compulsory hai kya?"
+    - role: "assistant"
+      content: "Haan, WFH ke dauran core hours me reachability mandatory hai."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "10 AM – 4 PM IST"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_18"
+  category: "multi_turn"
+  role: "employee"
+  question: "agar resign karein toh kitne din?"
+  history:
+    - role: "user"
+      content: "Naye joiners ka probation period kitna hota hai?"
+    - role: "assistant"
+      content: "Sabhi naye employees ka 90-day probation period hota hai."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "if probation, notice is 15 days"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_19"
+  category: "multi_turn"
+  role: "employee"
+  question: "kaunsa client software install karna hoga?"
+  history:
+    - role: "user"
+      content: "Ghar se kaam karte waqt office network connect karne ka kya tarika hai?"
+    - role: "assistant"
+      content: "Remote access ke liye corporate VPN use karna compulsory hai."
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "GlobalProtect"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "multi_20"
+  category: "multi_turn"
+  role: "employee"
+  question: "kahan submit karna hota hai?"
+  history:
+    - role: "user"
+      content: "Travel ke dauran kharche ka bill kaise claim karein?"
+    - role: "assistant"
+      content: "Business expense claim karne ke liye receipts upload karni hoti hain."
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "submitted through the finance portal"
+  forbidden_sources: ["hr_benefits.md"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (c) 5 Ambiguous Cases (Same section number across multiple documents)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "ambig_01"
+  category: "ambiguous"
+  role: "employee"
+  question: "What are the rules under Section 4.2 regarding resignation notice period?"
+  topic: "Separation and Resignation Notice"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "if probation, notice is 15 days, else 60 days"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "ambig_02"
+  category: "ambiguous"
+  role: "employee"
+  question: "What are the rules under Section 4.2 regarding laptop full-disk encryption and BitLocker?"
+  topic: "Device Security and Encryption"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "BitLocker on Windows"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "ambig_03"
+  category: "ambiguous"
+  role: "employee"
+  question: "Under Section 4.2, what is the screen lock timeout for unattended laptops?"
+  topic: "Laptop Screen Lock Inactivity"
+  expected_sources: ["it_policies.md"]
+  expected_phrase: "5 minutes of inactivity"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "ambig_04"
+  category: "ambiguous"
+  role: "employee"
+  question: "What is the annual paid leave entitlement described in Section 1.1?"
+  topic: "Employee Annual Paid Leave"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "15 paid leave (PL) days"
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "ambig_05"
+  category: "ambiguous"
+  role: "employee"
+  question: "How long is the initial new hire probation period specified in Section 3.1?"
+  topic: "New Hire Probation Period"
+  expected_sources: ["employee_handbook.md"]
+  expected_phrase: "90-day probation period"
+  forbidden_sources: ["hr_benefits.md"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (d) 10 Hard Negatives (Unanswerable company questions -> expected 0 chunks)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "neg_hard_01"
+  category: "hard_negative"
+  role: "employee"
+  question: "What is the policy for paid maternity leave, paternity leave, or child adoption?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_02"
+  category: "hard_negative"
+  role: "employee"
+  question: "Does Acme Corp reimburse gym memberships, fitness passes, or wellness stipends?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_03"
+  category: "hard_negative"
+  role: "employee"
+  question: "What is the vesting schedule and cliff period for employee stock options (ESOP)?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_04"
+  category: "hard_negative"
+  role: "employee"
+  question: "Does the office pet policy permit bringing dogs or domestic cats to work?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_05"
+  category: "hard_negative"
+  role: "employee"
+  question: "Can an employee apply for an unpaid sabbatical leave after 5 years of tenure?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_06"
+  category: "hard_negative"
+  role: "employee"
+  question: "Does Acme Corp provide company car lease schemes or monthly fuel reimbursements?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_07"
+  category: "hard_negative"
+  role: "employee"
+  question: "What is the annual tuition assistance reimbursement limit for higher education?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_08"
+  category: "hard_negative"
+  role: "employee"
+  question: "What are the compliance rules regarding moonlighting and secondary freelancing jobs?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_09"
+  category: "hard_negative"
+  role: "employee"
+  question: "Does the corporate office provide an on-site creche or childcare facility for parents?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_hard_10"
+  category: "hard_negative"
+  role: "employee"
+  question: "What is the relocation allowance package provided for interstate transfers?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (e) 10 Easy Negatives (Off-topic queries -> expected 0 chunks)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "neg_easy_01"
+  category: "easy_negative"
+  role: "employee"
+  question: "What is the authentic recipe for baking chocolate brownies with roasted walnuts?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_02"
+  category: "easy_negative"
+  role: "employee"
+  question: "Which cricket team won the ICC Cricket World Cup in 2023?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_03"
+  category: "easy_negative"
+  role: "employee"
+  question: "Write a four-line rhyming poem about golden autumn leaves in the park."
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_04"
+  category: "easy_negative"
+  role: "employee"
+  question: "What is the official capital city of Australia?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_05"
+  category: "easy_negative"
+  role: "employee"
+  question: "How do I patch a punctured bicycle tire at home with a repair kit?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_06"
+  category: "easy_negative"
+  role: "employee"
+  question: "State Newton's third law of motion with a real-world example."
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_07"
+  category: "easy_negative"
+  role: "employee"
+  question: "Suggest five top-rated science fiction films produced in the 2010s."
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_08"
+  category: "easy_negative"
+  role: "employee"
+  question: "Explain how chloroplasts and chlorophyll convert solar energy in photosynthesis."
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_09"
+  category: "easy_negative"
+  role: "employee"
+  question: "What is the boiling point temperature of liquid nitrogen at atmospheric pressure?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "neg_easy_10"
+  category: "easy_negative"
+  role: "employee"
+  question: "Tell me a short witty joke about software debugging and coffee."
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# (f) 10 Access Control Questions (Employee role querying HR compensation/bonus)
+# ─────────────────────────────────────────────────────────────────────────────
+
+- id: "access_01"
+  category: "access"
+  role: "employee"
+  question: "What are the official salary bands and annual CTC ranges for L1 to L3?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_02"
+  category: "access"
+  role: "employee"
+  question: "What is the annual CTC compensation range for an L6 Director level?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_03"
+  category: "access"
+  role: "employee"
+  question: "What bonus percentage of CTC is disbursed for Meets Expectations rating?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_04"
+  category: "access"
+  role: "employee"
+  question: "What bonus percentage of CTC is awarded for Outstanding performance rating?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_05"
+  category: "access"
+  role: "employee"
+  question: "What are the tenure and review cycle criteria for L1 to L2 promotion?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_06"
+  category: "access"
+  role: "employee"
+  question: "How do bi-annual performance appraisal ratings determine hike percentages?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_07"
+  category: "access"
+  role: "employee"
+  question: "What total percentage of company payroll is set aside for the annual bonus pool?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_08"
+  category: "access"
+  role: "employee"
+  question: "What is the minimum tenure requirement at L2 before becoming eligible for L3?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_09"
+  category: "access"
+  role: "employee"
+  question: "Which performance review rating is reserved exclusively for the top 5 percent cohort?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]
+
+- id: "access_10"
+  category: "access"
+  role: "employee"
+  question: "Can an employee on an active Performance Improvement Plan (PIP) receive an annual bonus?"
+  expected_sources: []
+  forbidden_sources: ["hr_benefits.md"]

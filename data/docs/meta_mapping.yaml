@@ -1,0 +1,19 @@
+# Fallback metadata for docs without YAML frontmatter.
+# Frontmatter in the .md file always takes priority over entries here.
+
+employee_handbook.md:
+  department: general
+  access_level: all
+
+it_policies.md:
+  department: it
+  access_level: all
+
+hr_benefits.md:
+  department: hr
+  access_level: hr
+
+leave_and_notice_policy.md:
+  department: hr
+  access_level: all
+

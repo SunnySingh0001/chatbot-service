@@ -1,0 +1,218 @@
+# Golden evaluation dataset for Chatbot Service RAG retrieval and access control.
+# 30 curated questions across normal, hinglish, hindi, multistep, not_in_docs, off_topic, access.
+
+- id: 1
+  question: "How many paid leave days do full-time employees receive per year?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 2
+  question: "What are the complexity and character requirements for corporate passwords?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 3
+  question: "Can an employee work from home during their initial 90-day probation period?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 4
+  question: "What is the notice period duration for confirmed employees who resign?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 5
+  question: "What is the reporting timeframe if a company laptop is lost or stolen?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 6
+  question: "What is the daily maximum allowance for domestic business travel meals?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 7
+  question: "Which VPN software client must be used to access internal systems remotely?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 8
+  question: "What are the SLA response times for P1 and P2 IT support helpdesk tickets?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 9
+  question: "Leave policy ke mutabiq saal me kitne paid leave milte hain?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 10
+  question: "Work from home wfh policy me kitne din remote allow hai?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 11
+  question: "Corporate password policy me password kitne din me rotate karna hai?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 12
+  question: "Company laptop par unauthorized software install kar sakte hain kya?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 13
+  question: "Resignation ke baad confirmed employee ka notice period kitna hota hai?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 14
+  question: "Travel expense reimbursement submit karne ki limit kitne din hai?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "hinglish"
+
+- id: 15
+  question: "L2 aur L3 engineering roles ke salary bands aur CTC ranges kya hain?"
+  role: "hr"
+  expected_sources: ["hr_benefits.md"]
+  must_not_retrieve: []
+  type: "hinglish"
+
+- id: 16
+  question: "Leave policy: वार्षिक अवकाश (paid leave) कितने दिनों का मिलता है?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 17
+  question: "Work from home policy: घर से काम करने के नियम क्या हैं?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 18
+  question: "Password policy: पासवर्ड कितने दिनों में रोटेट या बदलना होता है?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 19
+  question: "Device policy: कंपनी का लैपटॉप गुम हो जाने पर रिपोर्ट कैसे करें?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
+
+- id: 20
+  question: "What are the official salary bands and annual CTC ranges for L1 to L3 levels?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "access"
+
+- id: 21
+  question: "What is the annual bonus pool percentage for an Outstanding rating?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "access"
+
+- id: 22
+  question: "What is the tenure and rating criteria required for L1 to L2 promotion?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "access"
+
+- id: 23
+  question: "What are the official salary bands and annual CTC ranges for L1 to L3 levels?"
+  role: "hr"
+  expected_sources: ["hr_benefits.md"]
+  must_not_retrieve: []
+  type: "access"
+
+- id: 24
+  question: "What bonus percentage of CTC is disbursed for Meets Expectations rating?"
+  role: "hr"
+  expected_sources: ["hr_benefits.md"]
+  must_not_retrieve: []
+  type: "access"
+
+- id: 25
+  question: "What is the probation duration and what is the notice period during probation?"
+  role: "employee"
+  expected_sources: ["employee_handbook.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "multistep"
+
+- id: 26
+  question: "If a company laptop is lost while traveling and using VPN, what are the IT security steps?"
+  role: "employee"
+  expected_sources: ["it_policies.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "multistep"
+
+- id: 27
+  question: "How do bi-annual performance review ratings in March determine April bonus payouts?"
+  role: "hr"
+  expected_sources: ["hr_benefits.md"]
+  must_not_retrieve: []
+  type: "multistep"
+
+- id: 28
+  question: "Does the company allow bringing pets to the office or provide onsite childcare facilities?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md"]
+  type: "not_in_docs"
+  requires_llm: true
+  skip_reason: "Hard workplace negative requires LLM or document grader node to reject chunks"
+
+- id: 29
+  question: "What is the policy for maternity leave, paternity leave, or child adoption leave?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md"]
+  type: "not_in_docs"
+  requires_llm: true
+  skip_reason: "Hard workplace negative requires LLM or document grader node to reject chunks"
+
+- id: 30
+  question: "What is the authentic recipe for baking chocolate brownies with walnuts?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md"]
+  type: "off_topic"
+  requires_llm: true
+  skip_reason: "Off-topic negative requires provisional threshold 0.77 or LLM rejection"

@@ -1,0 +1,288 @@
+# Comprehensive labeled dataset for multilingual-e5-small embedding evaluation.
+# 30 positives, 30 negatives (including hard out-of-doc workplace queries), and 10 access-gated queries.
+
+positives:
+  - id: p1
+    question: "Leave policy kya hai?"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p2
+    question: "wfh kitne din mil sakte hain"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p3
+    question: "password reset kaise karu"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p4
+    question: "notice period kitna hai"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p5
+    question: "sick leave rules kya h"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p6
+    question: "छुट्टी के नियम क्या हैं?"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p7
+    question: "घर से काम करने की पॉलिसी"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p8
+    question: "पासवर्ड कितने दिन में बदलना है?"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p9
+    question: "vpn kaise connect kre"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p10
+    question: "how many paid leaves?"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p11
+    question: "pasword length minimum"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p12
+    question: "meals reimbursment limit"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p13
+    question: "lost compnay laptop whom to report"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p14
+    question: "it helpdesk floor support"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p15
+    question: "probation confirmation period"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p16
+    question: "resign krne par notice kitne din ka hota h"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p17
+    question: "carry forward leave limit"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p18
+    question: "core hours on slack for wfh"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p19
+    question: "screen lock inactivity time"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p20
+    question: "disk encrypshun bitlocker requirement"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p21
+    question: "unauthorized software installation on laptop"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p22
+    question: "helpdesk SLA response time for P1"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p23
+    question: "harassment report email hotline"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p24
+    question: "expense submission 30 days deadline"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p25
+    question: "laptop chori ho gaya kya kare"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p26
+    question: "बीमारी की छुट्टी के नियम"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p27
+    question: "रिमोट काम के दौरान काम के घंटे"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p28
+    question: "कंपनी लैपटॉप खो जाने पर क्या करें"
+    role: "employee"
+    expected_source: "it_policies.md"
+  - id: p29
+    question: "what is the domestic travel meal limit per day?"
+    role: "employee"
+    expected_source: "employee_handbook.md"
+  - id: p30
+    question: "approved password manager bitwarden"
+    role: "employee"
+    expected_source: "it_policies.md"
+
+negatives:
+  - id: n1
+    question: "Diwali bonus kab aayega"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n2
+    question: "Maternity leave policy kitne mahine ki hoti hai?"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n3
+    question: "Paternity leave entitlement for new fathers"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n4
+    question: "Salary advance request form kaise submit kare?"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n5
+    question: "Health insurance claim cashless hospital list"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n6
+    question: "Cab facility and night drop for female employees"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n7
+    question: "Relocation allowance and shifting reimbursement policy"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n8
+    question: "Gratuity eligibility and calculation formula after 5 years"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n9
+    question: "ESOP and stock options vesting schedule for staff"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n10
+    question: "Office creche and childcare support facility"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n11
+    question: "Gym subscription reimbursement process"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n12
+    question: "Monitors and ergonomic chair allowance for home office"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n13
+    question: "Annual company offsite destination this year"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n14
+    question: "Employee referral bonus amount for senior developers"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n15
+    question: "Higher education sponsorship and tuition assistance policy"
+    role: "employee"
+    type: "hard_unanswerable"
+  - id: n16
+    question: "What is today's cricket score of India vs Australia?"
+    role: "employee"
+    type: "off_topic"
+  - id: n17
+    question: "Aaj cafeteria me lunch menu kya hai?"
+    role: "employee"
+    type: "off_topic"
+  - id: n18
+    question: "What is the weather forecast for Bangalore today?"
+    role: "employee"
+    type: "off_topic"
+  - id: n19
+    question: "Best movie in theatres this weekend"
+    role: "employee"
+    type: "off_topic"
+  - id: n20
+    question: "Where is the nearest petrol pump?"
+    role: "employee"
+    type: "off_topic"
+  - id: n21
+    question: "Can I bring my pet dog to office?"
+    role: "employee"
+    type: "off_topic"
+  - id: n22
+    question: "How to book flight tickets for personal vacation?"
+    role: "employee"
+    type: "off_topic"
+  - id: n23
+    question: "Office swimming pool timing"
+    role: "employee"
+    type: "off_topic"
+  - id: n24
+    question: "Who won the FIFA World Cup in 2022?"
+    role: "employee"
+    type: "off_topic"
+  - id: n25
+    question: "Recipes for making chocolate cake at home"
+    role: "employee"
+    type: "off_topic"
+  - id: n26
+    question: "How to invest in cryptocurrency and Bitcoin"
+    role: "employee"
+    type: "off_topic"
+  - id: n27
+    question: "Directions to the nearest shopping mall"
+    role: "employee"
+    type: "off_topic"
+  - id: n28
+    question: "Train schedule from Delhi to Mumbai"
+    role: "employee"
+    type: "off_topic"
+  - id: n29
+    question: "Song lyrics for Bohemian Rhapsody"
+    role: "employee"
+    type: "off_topic"
+  - id: n30
+    question: "How many planets are in the solar system?"
+    role: "employee"
+    type: "off_topic"
+
+access_tests:
+  - id: a1
+    question: "What are the salary bands for L1 to L6 employees?"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a2
+    question: "CTC range for Senior L3 engineering role"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a3
+    question: "Bonus percentage payout for Outstanding performance rating"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a4
+    question: "Performance rating scale: Needs Improvement vs Meets Expectations"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a5
+    question: "Promotion criteria tenure for L1 to L2 transition"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a6
+    question: "Director and Head of Function L6 salary package range"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a7
+    question: "L2 se L3 promotion ke liye kitne mahine ka tenure chahiye?"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a8
+    question: "Rating ke hisab se hike percentage kitna milega?"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a9
+    question: "Group health insurance sum insured family floater amount"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
+  - id: a10
+    question: "Peer feedback 360 review criteria and calibration process"
+    role: "employee"
+    forbidden_source: "hr_benefits.md"
