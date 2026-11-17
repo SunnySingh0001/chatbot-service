@@ -83,6 +83,19 @@ async def _stream_langgraph_sse(
             yield f"data: {json.dumps({'done': True, 'sources': []})}\n\n"
 
 
+def _stream_fallback_sse(
+    fallback_text: str,
+    user_id: str,
+    question: str,
+    start_time: float,
+) -> Generator[str, None, None]:
+    """Streams fixed no-context fallback tokens directly as SSE events without calling LLM."""
+    yield f"data: {json.dumps({'token': fallback_text})}\n\n"
+    yield f"data: {json.dumps({'done': True, 'sources': []})}\n\n"
+    latency_ms = (time.perf_counter() - start_time) * 1000.0
+    log_interaction(user_id, question, [], latency_ms)
+
+
 def _run_classic_chat(
     chat_req: ChatRequest,
     current_user: AuthenticatedUser,
@@ -91,13 +104,16 @@ def _run_classic_chat(
     """Builds classic streaming response by retrieving and prompting directly."""
     chunks = retrieve(chat_req.message, role=current_user.role)
     unique_sources = list(dict.fromkeys(c.source for c in chunks))
-
     history_payload = [m.model_dump() for m in chat_req.history]
-    if chunks:
-        messages = build_messages(chat_req.message, chunks, history_payload)
-    else:
-        messages = build_no_context_messages(chat_req.message, history_payload)
 
+    if not chunks:
+        from app.rag.prompt import get_no_context_message  # noqa: PLC0415
+
+        fallback = get_no_context_message(chat_req.message)
+        gen = _stream_fallback_sse(fallback, current_user.user_id, chat_req.message, start_time)
+        return StreamingResponse(gen, media_type="text/event-stream", headers=_SSE_HEADERS)
+
+    messages = build_messages(chat_req.message, chunks, history_payload)
     return StreamingResponse(
         _stream_classic_sse(
             messages=messages,

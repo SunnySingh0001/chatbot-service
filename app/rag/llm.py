@@ -77,6 +77,27 @@ def _extract_doc_snippets(user_msg: str) -> list[str]:
     return snippets[:4]
 
 
+def _build_mock_response(user_msg: str) -> str:
+    """Builds synthetic answer text from retrieved context documents or returns fallback."""
+    import re  # noqa: PLC0415
+
+    if "No relevant documents were found" in user_msg:
+        from app.rag.prompt import get_no_context_message  # noqa: PLC0415
+
+        q_match = re.search(r"<question>(.*?)</question>", user_msg, re.DOTALL)
+        q_text = q_match.group(1).strip() if q_match else ""
+        return get_no_context_message(q_text)
+
+    sources = list(dict.fromkeys(re.findall(r'<document\s+source="([^"]+)"', user_msg)))
+    snippets = _extract_doc_snippets(user_msg)
+    response_text = "According to company documentation:\n"
+    for item in snippets:
+        response_text += f"- {item}\n"
+    if sources:
+        response_text += f"\nSources: {', '.join(sources)}"
+    return response_text
+
+
 def _stream_mock(
     messages: list[dict[str, str]],
     fallback_notice: str = "",
@@ -85,36 +106,16 @@ def _stream_mock(
     import re  # noqa: PLC0415
     import time  # noqa: PLC0415
 
+    delay_s = max(0, settings.mock_token_delay_ms) / 1000.0
     if fallback_notice:
         yield f"{fallback_notice}\n\n"
 
     user_msg = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
-
-    # Check if context was missing
-    if "No relevant documents were found" in user_msg:
-        from app.rag.prompt import get_no_context_message
-        q_match = re.search(r"<question>(.*?)</question>", user_msg, re.DOTALL)
-        q_text = q_match.group(1).strip() if q_match else ""
-        fallback_text = get_no_context_message(q_text)
-        for token in re.findall(r"\S+|\n|\s+", fallback_text):
-            time.sleep(0.015)
-            yield token
-        return
-
-    # Extract source names and relevant snippets from retrieved document context
-    sources = list(dict.fromkeys(re.findall(r'<document\s+source="([^"]+)"', user_msg)))
-    snippets = _extract_doc_snippets(user_msg)
-
-    response_text = "According to company documentation:\n"
-    for item in snippets:
-        response_text += f"- {item}\n"
-    if sources:
-        response_text += f"\nSources: {', '.join(sources)}"
-
-    # Stream answer tokens with slight delay to mimic LLM generation
-    for word in re.findall(r"\S+|\n|\s+", response_text):
-        time.sleep(0.01)
-        yield word
+    text = _build_mock_response(user_msg)
+    for token in re.findall(r"\S+|\n|\s+", text):
+        if delay_s > 0:
+            time.sleep(delay_s)
+        yield token
 
 
 # ── Provider implementations ──────────────────────────────────────────────────

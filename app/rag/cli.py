@@ -41,8 +41,9 @@ def _print_chunks(chunks: list[RetrievedChunk]) -> None:
         print("  (none — similarity below threshold; will use 'I don't know' path)")
         return
     for i, chunk in enumerate(chunks):
+        score_str = f"{chunk.score:.4f}" if chunk.score is not None else "N/A"
         print(
-            f"\n[{i}]  score={chunk.score:.4f}  "
+            f"\n[{i}]  score={score_str}  "
             f"source={chunk.source}  dept={chunk.department}"
         )
         print("  " + "·" * 40)

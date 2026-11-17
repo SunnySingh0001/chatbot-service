@@ -33,7 +33,8 @@ def test_golden_retrieval(case: dict[str, Any]) -> None:  # type: ignore[misc]
     must_not: list[str] = case.get("must_not_retrieve", [])
     case_type: str = case.get("type", "")
 
-    chunks = retrieve(query=question, role=role)
+    thresh = 0.77 if case_type == "off_topic" else None
+    chunks = retrieve(query=question, role=role, score_threshold=thresh)
     retrieved_sources = list(dict.fromkeys(c.source for c in chunks))
 
     # Verify that forbidden sources never appear

@@ -25,19 +25,28 @@ def _handle_rate_limit(request: Request, exc: RateLimitExceeded) -> Response:
 
 
 def _validate_collection_model_on_startup() -> None:
-    """Verifies at startup that ChromaDB collection model matches configured embedding model."""
+    """Verifies at startup that ChromaDB collection model and mode match configured settings."""
     import chromadb  # noqa: PLC0415
+    from app.rag.retriever import get_collection_name  # noqa: PLC0415
     client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
+    col_name = get_collection_name(settings.chunking_mode)
     try:
-        col = client.get_collection(name=settings.chroma_collection)
+        col = client.get_collection(name=col_name)
     except Exception:
         return
-    stored = col.metadata.get("embedding_model") if col.metadata else None
-    if stored and stored != settings.embedding_model:
-        raise RuntimeError(
-            f"Collection {settings.chroma_collection!r} was created with model {stored!r}, "
-            f"cannot mix with configured {settings.embedding_model!r}"
-        )
+    if col.metadata:
+        stored_model = col.metadata.get("embedding_model")
+        if stored_model and stored_model != settings.embedding_model:
+            raise RuntimeError(
+                f"Collection {col_name!r} was created with model {stored_model!r}, "
+                f"cannot mix with configured {settings.embedding_model!r}"
+            )
+        stored_mode = col.metadata.get("chunking_mode")
+        if stored_mode and stored_mode != settings.chunking_mode:
+            raise RuntimeError(
+                f"Collection {col_name!r} was created with chunking mode {stored_mode!r}, "
+                f"cannot mix with configured {settings.chunking_mode!r}"
+            )
 
 
 def _validate_orchestrator_on_startup() -> None:

@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     # ── App ───────────────────────────────────────────────────────────────────
     app_env: str = "development"
     log_level: str = "INFO"
+    mock_token_delay_ms: int = Field(
+        default=10,
+        validation_alias=AliasChoices(
+            "MOCK_TOKEN_DELAY_MS", "mock_token_delay_ms"
+        ),
+    )
     orchestrator: str = Field(
         default="classic", validation_alias=AliasChoices("ORCHESTRATOR", "orchestrator")
     )
@@ -75,11 +81,52 @@ class Settings(BaseSettings):
     chunking_mode: str = Field(
         default="section", validation_alias=AliasChoices("CHUNKING_MODE", "chunking_mode")
     )
+    table_max_rows_per_chunk: int = Field(
+        default=0,
+        validation_alias=AliasChoices(
+            "TABLE_MAX_ROWS_PER_CHUNK", "table_max_rows_per_chunk"
+        ),
+    )
     hybrid_search: bool = Field(
         default=False, validation_alias=AliasChoices("HYBRID_SEARCH", "hybrid_search")
     )
+    hybrid_candidates: int = Field(
+        default=8,
+        validation_alias=AliasChoices("HYBRID_CANDIDATES", "hybrid_candidates"),
+    )
     reranker: bool = Field(
         default=False, validation_alias=AliasChoices("RERANKER", "reranker")
+    )
+    reranker_model: str = Field(
+        default="b", validation_alias=AliasChoices("RERANKER_MODEL", "reranker_model")
+    )
+    rerank_candidates: int = Field(
+        default=8,
+        validation_alias=AliasChoices("RERANK_CANDIDATES", "rerank_candidates"),
+    )
+    rerank_top_k: int = Field(
+        default=3,
+        validation_alias=AliasChoices("RERANK_TOP_K", "rerank_top_k"),
+    )
+    rerank_min_score: float = Field(
+        default=0.0,
+        validation_alias=AliasChoices("RERANK_MIN_SCORE", "rerank_min_score"),
+    )
+    rerank_max_tokens: int = Field(
+        default=512,
+        validation_alias=AliasChoices("RERANK_MAX_TOKENS", "rerank_max_tokens"),
+    )
+    rerank_intra_op_threads: int = Field(
+        default=0,
+        validation_alias=AliasChoices(
+            "RERANK_INTRA_OP_THREADS", "rerank_intra_op_threads"
+        ),
+    )
+    rerank_inter_op_threads: int = Field(
+        default=0,
+        validation_alias=AliasChoices(
+            "RERANK_INTER_OP_THREADS", "rerank_inter_op_threads"
+        ),
     )
     query_rewrite: bool = Field(
         default=False, validation_alias=AliasChoices("QUERY_REWRITE", "query_rewrite")
@@ -107,6 +154,17 @@ class Settings(BaseSettings):
         if val not in ("section", "hierarchical"):
             raise ValueError(
                 f"Invalid CHUNKING_MODE={v!r}. Must be either 'section' or 'hierarchical'."
+            )
+        return val
+
+    @field_validator("reranker_model")
+    @classmethod
+    def validate_reranker_model(cls, v: str) -> str:
+        """Enforces that reranker_model is strictly 'b' or 'c'."""
+        val = v.lower().strip()
+        if val not in ("b", "c"):
+            raise ValueError(
+                f"Invalid RERANKER_MODEL={v!r}. Must be either 'b' or 'c'."
             )
         return val
 

@@ -202,11 +202,9 @@
 - id: 29
   question: "What is the policy for maternity leave, paternity leave, or child adoption leave?"
   role: "employee"
-  expected_sources: []
-  must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md"]
-  type: "not_in_docs"
-  requires_llm: true
-  skip_reason: "Hard workplace negative requires LLM or document grader node to reject chunks"
+  expected_sources: ["leave_and_notice_policy.md"]
+  must_not_retrieve: ["hr_benefits.md"]
+  type: "normal"
 
 - id: 30
   question: "What is the authentic recipe for baking chocolate brownies with walnuts?"
@@ -214,5 +212,12 @@
   expected_sources: []
   must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md"]
   type: "off_topic"
+
+- id: 31
+  question: "Does Acme Corp provide company car lease schemes or monthly fuel reimbursements?"
+  role: "employee"
+  expected_sources: []
+  must_not_retrieve: ["employee_handbook.md", "it_policies.md", "hr_benefits.md", "leave_and_notice_policy.md"]
+  type: "not_in_docs"
   requires_llm: true
-  skip_reason: "Off-topic negative requires provisional threshold 0.77 or LLM rejection"
+  skip_reason: "Hard workplace negative requires LLM or document grader node to reject chunks"

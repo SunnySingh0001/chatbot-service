@@ -1,0 +1,1878 @@
+{
+  "timestamp": "2026-11-17T08:45:08.647592+00:00",
+  "config_name": "section",
+  "flags": {
+    "chunking_mode": "section",
+    "table_max_rows_per_chunk": 0,
+    "hybrid_search": false,
+    "reranker": false,
+    "query_rewrite": false,
+    "grader": false,
+    "orchestrator": "classic"
+  },
+  "metrics": {
+    "mode": "section",
+    "table_max_rows": 0,
+    "threshold": 0.77,
+    "total_cases": 92,
+    "positive_cases": 62,
+    "negative_cases": 20,
+    "top_1_accuracy_pct": 56.45,
+    "top_3_recall_pct": 83.87,
+    "correct_no_context_rate_pct": 30.0,
+    "access_leaks": 0,
+    "cold_start_latency_ms": 2962.78,
+    "avg_warm_latency_ms": 23.43,
+    "p50_warm_latency_ms": 20.91,
+    "p95_warm_latency_ms": 43.33
+  },
+  "cases": [
+    {
+      "case_id": "single_01",
+      "category": "single_turn",
+      "question": "How many paid leave days are full-time employees entitled to per year?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "15 paid leave (pl) days",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8716,
+      "latency_ms": 21.68,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8716)] Full-time employees are entitled to **15 paid leave (PL) days** per calendar year. Unused PL may be "
+    },
+    {
+      "case_id": "single_02",
+      "category": "single_turn",
+      "question": "What are the complexity and length requirements for corporate passwords?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "at least 12 characters",
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8614,
+      "latency_ms": 19.97,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8614)] All corporate passwords must be **at least 12 characters** and include uppercase letters, lowercase "
+    },
+    {
+      "case_id": "single_03",
+      "category": "single_turn",
+      "question": "Can a new hire work from home during their initial 90-day probation period?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "wfh is not available during the first",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8841,
+      "latency_ms": 27.39,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8841)] All new hires undergo a **90-day probation period**. During probation: 0 PL days, 3 sick days. Confi"
+    },
+    {
+      "case_id": "single_04",
+      "category": "single_turn",
+      "question": "What is the notice period duration for confirmed employees who resign?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "60 days for confirmed staff",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8858,
+      "latency_ms": 18.7,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8858)] The separation and notice duration framework establishes operational continuity, thorough knowledge "
+    },
+    {
+      "case_id": "single_05",
+      "category": "single_turn",
+      "question": "How many days of sick leave are allowed per year and when is a medical certificate required?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "medical certificate is required",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8837,
+      "latency_ms": 22.79,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8837)] Full-time employees are entitled to **15 paid leave (PL) days** per calendar year. Unused PL may be "
+    },
+    {
+      "case_id": "single_06",
+      "category": "single_turn",
+      "question": "What is the company reimbursement limit for domestic travel meals per day?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "up to \u20b91,500 per day",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8796,
+      "latency_ms": 22.59,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8796)] Business expenses must be submitted through the finance portal within **30 days** of incurrence. Mea"
+    },
+    {
+      "case_id": "single_07",
+      "category": "single_turn",
+      "question": "Which VPN client software must employees use when accessing internal systems remotely?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "globalprotect",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8627,
+      "latency_ms": 23.04,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8627)] The corporate VPN (**GlobalProtect**) client must be active whenever accessing internal systems from"
+    },
+    {
+      "case_id": "single_08",
+      "category": "single_turn",
+      "question": "What full-disk encryption tool must be enabled on Windows company laptops?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "bitlocker on windows",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8638,
+      "latency_ms": 22.64,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8638)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "single_09",
+      "category": "single_turn",
+      "question": "What is the guaranteed response time SLA for a P1 critical outage ticket?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "2 hours sla",
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8458,
+      "latency_ms": 23.81,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8458)] Raise tickets at **it.acmecorp.example/helpdesk** or email **it@acmecorp.example**. Service Level Ag"
+    },
+    {
+      "case_id": "single_10",
+      "category": "single_turn",
+      "question": "What is the response time guarantee for SLA P2 major impact helpdesk tickets?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "4 hours sla",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8622,
+      "latency_ms": 23.89,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8622)] Raise tickets at **it.acmecorp.example/helpdesk** or email **it@acmecorp.example**. Service Level Ag"
+    },
+    {
+      "case_id": "single_11",
+      "category": "single_turn",
+      "question": "What password manager is approved by IT for storing and sharing corporate credentials?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "bitwarden for teams",
+      "retrieved_sources": [
+        "it_policies.md"
+      ],
+      "top_score": 0.8623,
+      "latency_ms": 20.48,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8623)] All corporate passwords must be **at least 12 characters** and include uppercase letters, lowercase "
+    },
+    {
+      "case_id": "single_12",
+      "category": "single_turn",
+      "question": "How quickly will IT remotely wipe a lost or stolen company laptop after it is reported?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "remotely wipe the device",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8979,
+      "latency_ms": 25.73,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8979)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "single_13",
+      "category": "single_turn",
+      "question": "How many days of unused paid leave can be carried forward into the next calendar year?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "10 days max",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8436,
+      "latency_ms": 20.01,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8436)] Acme Corp recognizes the vital importance of work-life harmony, rest, and personal recovery. To main"
+    },
+    {
+      "case_id": "single_14",
+      "category": "single_turn",
+      "question": "What are the core working hours during which employees must remain reachable on Slack?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "10 am \u2013 4 pm ist",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8756,
+      "latency_ms": 20.06,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8756)] Employees may work from home (WFH) up to **2 days per week**, subject to manager approval. WFH is no"
+    },
+    {
+      "case_id": "single_15",
+      "category": "single_turn",
+      "question": "Where should an employee submit a request for software installation approval?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "it.acmecorp.example/request",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8638,
+      "latency_ms": 20.04,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8638)] Only software **approved by the IT department** may be installed on company devices. Submit a softwa"
+    },
+    {
+      "case_id": "single_16",
+      "category": "single_turn",
+      "question": "VPN",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "globalprotect",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.856,
+      "latency_ms": 12.88,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8560)] The corporate VPN (**GlobalProtect**) client must be active whenever accessing internal systems from"
+    },
+    {
+      "case_id": "single_17",
+      "category": "single_turn",
+      "question": "SLA P1",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "2 hours sla",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8305,
+      "latency_ms": 13.22,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8305)] Raise tickets at **it.acmecorp.example/helpdesk** or email **it@acmecorp.example**. Service Level Ag"
+    },
+    {
+      "case_id": "single_18",
+      "category": "single_turn",
+      "question": "Section 2.3",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "2 days per week",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8317,
+      "latency_ms": 14.72,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8317)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "single_19",
+      "category": "single_turn",
+      "question": "pasword requirments",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "at least 12 characters",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8386,
+      "latency_ms": 13.62,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8386)] All corporate passwords must be **at least 12 characters** and include uppercase letters, lowercase "
+    },
+    {
+      "case_id": "single_20",
+      "category": "single_turn",
+      "question": "probaton perod",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "90-day probation period",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8126,
+      "latency_ms": 14.65,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8126)] All new hires undergo a **90-day probation period**. During probation: 0 PL days, 3 sick days. Confi"
+    },
+    {
+      "case_id": "single_21",
+      "category": "single_turn",
+      "question": "What is the policy for paid maternity leave, paternity leave, or child adoption?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "26 calendar weeks",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8552,
+      "latency_ms": 46.4,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8552)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "single_22",
+      "category": "single_turn",
+      "question": "Can an employee apply for an unpaid sabbatical leave after 5 years of tenure?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "permitted only after 5 years continuous service",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8716,
+      "latency_ms": 36.54,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8716)] Business Unit Vice President | | Sabbatical Leave (SAB) | Up to 90 days unpaid | Permitted only afte"
+    },
+    {
+      "case_id": "multi_01",
+      "category": "multi_turn",
+      "question": "Can I carry them forward?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "10 days max",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8084,
+      "latency_ms": 23.1,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8084)] All departing personnel remain legally bound by proprietary invention covenants and standard non-dis"
+    },
+    {
+      "case_id": "multi_02",
+      "category": "multi_turn",
+      "question": "Can we do it remotely during this time?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "wfh is not available during the first",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8142,
+      "latency_ms": 18.95,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8142)] Employees may work from home (WFH) up to **2 days per week**, subject to manager approval. WFH is no"
+    },
+    {
+      "case_id": "multi_03",
+      "category": "multi_turn",
+      "question": "what about the notice?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "notice is 15 days",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8492,
+      "latency_ms": 16.16,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8492)] During the separation lifecycle, conflicts may arise regarding the duration of notice, feasibility o"
+    },
+    {
+      "case_id": "multi_04",
+      "category": "multi_turn",
+      "question": "If it gets stolen, how quickly must I report it?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "remotely wipe the device",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8569,
+      "latency_ms": 19.98,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8569)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "multi_05",
+      "category": "multi_turn",
+      "question": "Which client application is required?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "globalprotect",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8085,
+      "latency_ms": 15.57,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8085)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "multi_06",
+      "category": "multi_turn",
+      "question": "How often do they expire?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "prompt you automatically",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.814,
+      "latency_ms": 23.8,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8140)] A successful exit depends heavily upon the qualitative thoroughness of the knowledge handover. Depar"
+    },
+    {
+      "case_id": "multi_07",
+      "category": "multi_turn",
+      "question": "What is the response time for P1?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "2 hours sla",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8119,
+      "latency_ms": 19.07,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8119)] Full-time employees are entitled to **15 paid leave (PL) days** per calendar year. Unused PL may be "
+    },
+    {
+      "case_id": "multi_08",
+      "category": "multi_turn",
+      "question": "What is the daily allowance limit for meals?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "up to \u20b91,500 per day",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8444,
+      "latency_ms": 28.15,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8444)] Business expenses must be submitted through the finance portal within **30 days** of incurrence. Mea"
+    },
+    {
+      "case_id": "multi_09",
+      "category": "multi_turn",
+      "question": "How many days per week are permitted?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "2 days per week",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.82,
+      "latency_ms": 19.19,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8200)] Full-time employees are entitled to **15 paid leave (PL) days** per calendar year. Unused PL may be "
+    },
+    {
+      "case_id": "multi_10",
+      "category": "multi_turn",
+      "question": "Where can I submit a request for it?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "it.acmecorp.example/request",
+      "retrieved_sources": [
+        "it_policies.md",
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8242,
+      "latency_ms": 16.71,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8242)] Only software **approved by the IT department** may be installed on company devices. Submit a softwa"
+    },
+    {
+      "case_id": "multi_11",
+      "category": "multi_turn",
+      "question": "Which tool is approved for storing them?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "bitwarden for teams",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7907,
+      "latency_ms": 24.04,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.7907)] Data is classified into four levels: **Public, Internal, Confidential, Restricted**. Confidential an"
+    },
+    {
+      "case_id": "multi_12",
+      "category": "multi_turn",
+      "question": "And for more than 3 consecutive days?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "medical certificate is required",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8084,
+      "latency_ms": 44.12,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8084)] All new hires undergo a **90-day probation period**. During probation: 0 PL days, 3 sick days. Confi"
+    },
+    {
+      "case_id": "multi_13",
+      "category": "multi_turn",
+      "question": "How many minutes of inactivity?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "5 minutes of inactivity",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8241,
+      "latency_ms": 20.22,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8241)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "multi_14",
+      "category": "multi_turn",
+      "question": "Where must they be submitted?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "submitted through the finance portal",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8155,
+      "latency_ms": 18.82,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8155)] Employees who believe that notice period terms have been unfairly enforced or that transitional dema"
+    },
+    {
+      "case_id": "multi_15",
+      "category": "multi_turn",
+      "question": "Where should an employee report it?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "hr@acmecorp.example",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8466,
+      "latency_ms": 14.13,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8466)] All employees must maintain professional, respectful conduct toward colleagues, clients, and partner"
+    },
+    {
+      "case_id": "multi_16",
+      "category": "multi_turn",
+      "question": "kitne din aage le ja sakte hain?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "10 days max",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7837,
+      "latency_ms": 34.8,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7837)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "multi_17",
+      "category": "multi_turn",
+      "question": "core hours kya hote hain?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "10 am \u2013 4 pm ist",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8282,
+      "latency_ms": 13.47,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8282)] Employees may work from home (WFH) up to **2 days per week**, subject to manager approval. WFH is no"
+    },
+    {
+      "case_id": "multi_18",
+      "category": "multi_turn",
+      "question": "agar resign karein toh kitne din?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "if probation, notice is 15 days",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7991,
+      "latency_ms": 23.81,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7991)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "multi_19",
+      "category": "multi_turn",
+      "question": "kaunsa client software install karna hoga?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "globalprotect",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8115,
+      "latency_ms": 17.26,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8115)] Only software **approved by the IT department** may be installed on company devices. Submit a softwa"
+    },
+    {
+      "case_id": "multi_20",
+      "category": "multi_turn",
+      "question": "kahan submit karna hota hai?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "submitted through the finance portal",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7884,
+      "latency_ms": 14.24,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.7884)] All employees must maintain professional, respectful conduct toward colleagues, clients, and partner"
+    },
+    {
+      "case_id": "ambig_01",
+      "category": "ambiguous",
+      "question": "What are the rules under Section 4.2 regarding resignation notice period?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "if probation, notice is 15 days, else 60 days",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8772,
+      "latency_ms": 29.0,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8772)] Notice period requirements are strictly defined by tenure status. Under Section 4.2: if probation, n"
+    },
+    {
+      "case_id": "ambig_02",
+      "category": "ambiguous",
+      "question": "What are the rules under Section 4.2 regarding laptop full-disk encryption and BitLocker?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "bitlocker on windows",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8917,
+      "latency_ms": 33.12,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8917)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "ambig_03",
+      "category": "ambiguous",
+      "question": "Under Section 4.2, what is the screen lock timeout for unattended laptops?",
+      "role": "employee",
+      "expected_sources": [
+        "it_policies.md"
+      ],
+      "expected_phrase": "5 minutes of inactivity",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.85,
+      "latency_ms": 23.79,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8500)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "ambig_04",
+      "category": "ambiguous",
+      "question": "What is the annual paid leave entitlement described in Section 1.1?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "15 paid leave (pl) days",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8561,
+      "latency_ms": 20.46,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8561)] Acme Corp recognizes the vital importance of work-life harmony, rest, and personal recovery. To main"
+    },
+    {
+      "case_id": "ambig_05",
+      "category": "ambiguous",
+      "question": "How long is the initial new hire probation period specified in Section 3.1?",
+      "role": "employee",
+      "expected_sources": [
+        "employee_handbook.md"
+      ],
+      "expected_phrase": "90-day probation period",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.877,
+      "latency_ms": 19.65,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8770)] All new hires undergo a **90-day probation period**. During probation: 0 PL days, 3 sick days. Confi"
+    },
+    {
+      "case_id": "neg_hard_01",
+      "category": "hard_negative",
+      "question": "Does Acme Corp offer pet bereavement leave or paid time off for veterinary surgery?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8353,
+      "latency_ms": 28.08,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8353)] Acme Corp recognizes the vital importance of work-life harmony, rest, and personal recovery. To main"
+    },
+    {
+      "case_id": "neg_hard_02",
+      "category": "hard_negative",
+      "question": "Does Acme Corp reimburse gym memberships, fitness passes, or wellness stipends?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8334,
+      "latency_ms": 24.72,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8334)] Welcome to Acme Corp. This handbook summarises your rights and obligations as an employee. All polic"
+    },
+    {
+      "case_id": "neg_hard_03",
+      "category": "hard_negative",
+      "question": "What is the vesting schedule and cliff period for employee stock options (ESOP)?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8109,
+      "latency_ms": 20.21,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8109)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "neg_hard_04",
+      "category": "hard_negative",
+      "question": "Does the office pet policy permit bringing dogs or domestic cats to work?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.806,
+      "latency_ms": 19.52,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8060)] Employees may work from home (WFH) up to **2 days per week**, subject to manager approval. WFH is no"
+    },
+    {
+      "case_id": "neg_hard_05",
+      "category": "hard_negative",
+      "question": "Can an employee take a company-funded executive MBA sponsorship while continuing full-time work?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8285,
+      "latency_ms": 22.11,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8285)] Only software **approved by the IT department** may be installed on company devices. Submit a softwa"
+    },
+    {
+      "case_id": "neg_hard_06",
+      "category": "hard_negative",
+      "question": "Does Acme Corp provide company car lease schemes or monthly fuel reimbursements?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.828,
+      "latency_ms": 20.95,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8280)] Acme Corp recognizes the vital importance of work-life harmony, rest, and personal recovery. To main"
+    },
+    {
+      "case_id": "neg_hard_07",
+      "category": "hard_negative",
+      "question": "What is the annual tuition assistance reimbursement limit for higher education?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.801,
+      "latency_ms": 20.24,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8010)] Business expenses must be submitted through the finance portal within **30 days** of incurrence. Mea"
+    },
+    {
+      "case_id": "neg_hard_08",
+      "category": "hard_negative",
+      "question": "What are the compliance rules regarding moonlighting and secondary freelancing jobs?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8133,
+      "latency_ms": 20.71,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8133)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "neg_hard_09",
+      "category": "hard_negative",
+      "question": "Does the corporate office provide an on-site creche or childcare facility for parents?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7824,
+      "latency_ms": 21.22,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7824)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "neg_hard_10",
+      "category": "hard_negative",
+      "question": "What is the corporate policy regarding patent invention bonuses and intellectual property royalties paid to inventors?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7967,
+      "latency_ms": 30.05,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7967)] All departing personnel remain legally bound by proprietary invention covenants and standard non-dis"
+    },
+    {
+      "case_id": "neg_easy_01",
+      "category": "easy_negative",
+      "question": "What is the authentic recipe for baking chocolate brownies with roasted walnuts?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 20.6,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_02",
+      "category": "easy_negative",
+      "question": "Which cricket team won the ICC Cricket World Cup in 2023?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 17.64,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_03",
+      "category": "easy_negative",
+      "question": "Write a four-line rhyming poem about golden autumn leaves in the park.",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 22.4,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_04",
+      "category": "easy_negative",
+      "question": "What is the official capital city of Australia?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 16.13,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_05",
+      "category": "easy_negative",
+      "question": "How do I patch a punctured bicycle tire at home with a repair kit?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7915,
+      "latency_ms": 20.52,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.7915)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "neg_easy_06",
+      "category": "easy_negative",
+      "question": "State Newton's third law of motion with a real-world example.",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7788,
+      "latency_ms": 19.48,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7788)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "neg_easy_07",
+      "category": "easy_negative",
+      "question": "Suggest five top-rated science fiction films produced in the 2010s.",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 20.32,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_08",
+      "category": "easy_negative",
+      "question": "Explain how chloroplasts and chlorophyll convert solar energy in photosynthesis.",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.7925,
+      "latency_ms": 25.9,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7925)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "neg_easy_09",
+      "category": "easy_negative",
+      "question": "What is the boiling point temperature of liquid nitrogen at atmospheric pressure?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 20.86,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "neg_easy_10",
+      "category": "easy_negative",
+      "question": "Tell me a short witty joke about software debugging and coffee.",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8123,
+      "latency_ms": 18.38,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8123)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "access_01",
+      "category": "access",
+      "question": "What are the official salary bands and annual CTC ranges for L1 to L3?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8034,
+      "latency_ms": 22.77,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8034)] Acme Corp recognizes the vital importance of work-life harmony, rest, and personal recovery. To main"
+    },
+    {
+      "case_id": "access_02",
+      "category": "access",
+      "question": "What is the annual CTC compensation range for an L6 Director level?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8234,
+      "latency_ms": 20.37,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8234)] | Direct Reporting Manager | | Casual Leave (CL) | 6 working days | 0 days (strictly lapses on 31st "
+    },
+    {
+      "case_id": "access_03",
+      "category": "access",
+      "question": "What bonus percentage of CTC is disbursed for Meets Expectations rating?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [],
+      "top_score": null,
+      "latency_ms": 19.38,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": ""
+    },
+    {
+      "case_id": "access_04",
+      "category": "access",
+      "question": "What bonus percentage of CTC is awarded for Outstanding performance rating?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7752,
+      "latency_ms": 35.01,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7752)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "access_05",
+      "category": "access",
+      "question": "What are the tenure and review cycle criteria for L1 to L2 promotion?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8112,
+      "latency_ms": 44.83,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8112)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "access_06",
+      "category": "access",
+      "question": "How do bi-annual performance appraisal ratings determine hike percentages?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7858,
+      "latency_ms": 20.4,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7858)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "access_07",
+      "category": "access",
+      "question": "What total percentage of company payroll is set aside for the annual bonus pool?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.7879,
+      "latency_ms": 42.69,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7879)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "access_08",
+      "category": "access",
+      "question": "What is the minimum tenure requirement at L2 before becoming eligible for L3?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8151,
+      "latency_ms": 61.24,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8151)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "access_09",
+      "category": "access",
+      "question": "Which performance review rating is reserved exclusively for the top 5 percent cohort?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.7722,
+      "latency_ms": 29.19,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.7722)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "access_10",
+      "category": "access",
+      "question": "Can an employee on an active Performance Improvement Plan (PIP) receive an annual bonus?",
+      "role": "employee",
+      "expected_sources": [],
+      "expected_phrase": "",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8187,
+      "latency_ms": 28.72,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": true,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8187)] Full-time employees are entitled to **15 paid leave (PL) days** per calendar year. Unused PL may be "
+    },
+    {
+      "case_id": "policy_01",
+      "category": "single_turn",
+      "question": "What is the notice period for confirmed staff leaving the company under normal terms?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "mandatory standard separation notice period is 60 calendar days",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8535,
+      "latency_ms": 30.66,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8535)] Notice period requirements are strictly defined by tenure status. Under Section 4.2: if probation, n"
+    },
+    {
+      "case_id": "policy_02",
+      "category": "single_turn",
+      "question": "Can confirmed employee notice be reduced under mutual agreement and VP sign-off?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "minimum of 30 calendar days provided all transitional knowledge transfers",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8353,
+      "latency_ms": 23.14,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8353)] The separation and notice duration framework establishes operational continuity, thorough knowledge "
+    },
+    {
+      "case_id": "policy_03",
+      "category": "single_turn",
+      "question": "How short can notice be if there is a validated critical medical emergency?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "abbreviated 14 calendar days upon executive approval",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8273,
+      "latency_ms": 49.5,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8273)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "policy_04",
+      "category": "single_turn",
+      "question": "Can an employee take casual or paid leaves while serving notice?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "prohibited from availing paid annual leave",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8731,
+      "latency_ms": 29.4,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8731)] panel, the notice period requirement may be modified to an abbreviated 14 calendar days upon executi"
+    },
+    {
+      "case_id": "policy_05",
+      "category": "single_turn",
+      "question": "What daily communication is required from employees during notice period?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "daily handover briefings",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8586,
+      "latency_ms": 18.8,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8586)] panel, the notice period requirement may be modified to an abbreviated 14 calendar days upon executi"
+    },
+    {
+      "case_id": "policy_06",
+      "category": "single_turn",
+      "question": "What consequences occur if someone fails to serve their required notice period?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "forfeit of separation gratuity clearances",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8466,
+      "latency_ms": 24.47,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8466)] Managers who determine that a departing team member is deliberately withholding critical project kno"
+    },
+    {
+      "case_id": "policy_07",
+      "category": "single_turn",
+      "question": "How much tenure is required before applying for unpaid study leave?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "requires 24 months of completed company tenure",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.8424,
+      "latency_ms": 21.43,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8424)] earned | Must be availed within 60 days of accrual | Project Delivery Lead | | Paternity Leave (PL-P"
+    },
+    {
+      "case_id": "policy_08",
+      "category": "single_turn",
+      "question": "What is the service requirement to be eligible for sabbatical leave?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "permitted only after 5 years continuous service",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8398,
+      "latency_ms": 22.66,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8398)] Business Unit Vice President | | Sabbatical Leave (SAB) | Up to 90 days unpaid | Permitted only afte"
+    },
+    {
+      "case_id": "policy_09",
+      "category": "single_turn",
+      "question": "Under what circumstance does the company provide relocation leave?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "provided for interstate business office transfers",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8266,
+      "latency_ms": 17.94,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8266)] Business Unit Vice President | | Sabbatical Leave (SAB) | Up to 90 days unpaid | Permitted only afte"
+    },
+    {
+      "case_id": "policy_10",
+      "category": "single_turn",
+      "question": "Where must company laptops and access smartcards be handed over on the last day?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "floor 2 it service desk",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8373,
+      "latency_ms": 25.39,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8373)] All company laptops must have **full-disk encryption** enabled (BitLocker on Windows, FileVault on M"
+    },
+    {
+      "case_id": "policy_11",
+      "category": "single_turn",
+      "question": "What security hardware items must be surrendered during physical asset reclamation?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "cryptographic hardware tokens",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.814,
+      "latency_ms": 28.9,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8140)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "policy_12",
+      "category": "single_turn",
+      "question": "In how many days must the finance team disburse the full and final exit settlement?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "within exactly 30 calendar days",
+      "retrieved_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8522,
+      "latency_ms": 22.17,
+      "top_1_hit": true,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[leave_and_notice_policy.md (0.8522)] handover roadmaps, and statutory timelines. 3. Knowledge Transfer Dossier: The departing staff membe"
+    },
+    {
+      "case_id": "policy_multi_01",
+      "category": "multi_turn",
+      "question": "Can it be shortened under mutual agreement?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "minimum of 30 calendar days provided all transitional knowledge transfers",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md"
+      ],
+      "top_score": 0.8121,
+      "latency_ms": 16.74,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8121)] Only software **approved by the IT department** may be installed on company devices. Submit a softwa"
+    },
+    {
+      "case_id": "policy_multi_02",
+      "category": "multi_turn",
+      "question": "Where exactly do I hand them in?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "floor 2 it service desk",
+      "retrieved_sources": [
+        "employee_handbook.md",
+        "leave_and_notice_policy.md",
+        "it_policies.md"
+      ],
+      "top_score": 0.8242,
+      "latency_ms": 16.99,
+      "top_1_hit": false,
+      "top_3_hit": true,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[employee_handbook.md (0.8242)] Welcome to Acme Corp. This handbook summarises your rights and obligations as an employee. All polic"
+    },
+    {
+      "case_id": "policy_multi_03",
+      "category": "multi_turn",
+      "question": "Kitne saal ki service chahiye iske liye?",
+      "role": "employee",
+      "expected_sources": [
+        "leave_and_notice_policy.md"
+      ],
+      "expected_phrase": "permitted only after 5 years continuous service",
+      "retrieved_sources": [
+        "it_policies.md",
+        "leave_and_notice_policy.md",
+        "employee_handbook.md"
+      ],
+      "top_score": 0.821,
+      "latency_ms": 16.42,
+      "top_1_hit": false,
+      "top_3_hit": false,
+      "correct_no_context": false,
+      "access_leak": false,
+      "top_snippet": "[it_policies.md (0.8210)] Raise tickets at **it.acmecorp.example/helpdesk** or email **it@acmecorp.example**. Service Level Ag"
+    }
+  ]
+}
