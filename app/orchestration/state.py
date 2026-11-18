@@ -12,6 +12,7 @@ class ChatState(TypedDict, total=False):
     user_id: str
     role: str
     question: str
+    search_query: str
     history: list[dict[str, str]]
     chunks: list[RetrievedChunk]
     sources: list[str]

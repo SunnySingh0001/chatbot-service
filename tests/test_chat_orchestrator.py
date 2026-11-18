@@ -1,4 +1,4 @@
-"""Integration tests for POST /chat under ORCHESTRATOR=classic vs ORCHESTRATOR=langgraph."""
+"""Integration tests for POST /chat streaming via LangGraph state orchestrator."""
 from __future__ import annotations
 
 import json
@@ -34,21 +34,6 @@ def _parse_sse_response(text: str) -> tuple[str, list[str]]:
             if "done" in payload and payload["done"]:
                 sources = payload.get("sources", [])
     return "".join(tokens), sources
-
-
-def test_chat_classic_mode_streams_sse(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Verifies that classic mode streams tokens and sources via SSE."""
-    monkeypatch.setattr(settings, "orchestrator", "classic")
-    token = create_access_token(user_id="emp_user", role="employee")
-    headers = {"Authorization": f"Bearer {token}"}
-    payload = {"message": "What is the probation period?"}
-
-    resp = client.post("/chat", json=payload, headers=headers)
-    assert resp.status_code == 200
-    assert "text/event-stream" in resp.headers["content-type"]
-    text, sources = _parse_sse_response(resp.text)
-    assert len(text) > 0
-    assert "employee_handbook.md" in sources
 
 
 def test_chat_langgraph_mode_streams_sse(monkeypatch: pytest.MonkeyPatch) -> None:

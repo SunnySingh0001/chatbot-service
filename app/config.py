@@ -41,6 +41,13 @@ class Settings(BaseSettings):
         default="company_docs_multilingual_e5_small",
         validation_alias=AliasChoices("CHROMA_COLLECTION", "chroma_collection"),
     )
+    mongodb_uri: str = Field(
+        default="", validation_alias=AliasChoices("MONGODB_URI", "mongodb_uri")
+    )
+    mongodb_db_name: str = Field(
+        default="fakhri2_0",
+        validation_alias=AliasChoices("MONGODB_DB_NAME", "mongodb_db_name"),
+    )
 
     @property
     def embed_model(self) -> str:
@@ -74,7 +81,7 @@ class Settings(BaseSettings):
         ),
     )
     orchestrator: str = Field(
-        default="classic", validation_alias=AliasChoices("ORCHESTRATOR", "orchestrator")
+        default="langgraph", validation_alias=AliasChoices("ORCHESTRATOR", "orchestrator")
     )
 
     # ── RAG Quality Upgrade Flags (default off) ──────────────────────────────
@@ -131,6 +138,26 @@ class Settings(BaseSettings):
     query_rewrite: bool = Field(
         default=False, validation_alias=AliasChoices("QUERY_REWRITE", "query_rewrite")
     )
+    rewrite_timeout_s: float = Field(
+        default=3.0,
+        validation_alias=AliasChoices("REWRITE_TIMEOUT_S", "rewrite_timeout_s"),
+    )
+    rewrite_model: str = Field(
+        default="",
+        validation_alias=AliasChoices("REWRITE_MODEL", "rewrite_model"),
+    )
+    rewrite_mode: str = Field(
+        default="replace",
+        validation_alias=AliasChoices("REWRITE_MODE", "rewrite_mode"),
+    )
+    rewrite_backend: str = Field(
+        default="llm",
+        validation_alias=AliasChoices("REWRITE_BACKEND", "rewrite_backend"),
+    )
+    heuristic_variant: str = Field(
+        default="a",
+        validation_alias=AliasChoices("HEURISTIC_VARIANT", "heuristic_variant"),
+    )
     grader: bool = Field(
         default=False, validation_alias=AliasChoices("GRADER", "grader")
     )
@@ -138,11 +165,11 @@ class Settings(BaseSettings):
     @field_validator("orchestrator")
     @classmethod
     def validate_orchestrator(cls, v: str) -> str:
-        """Enforces that orchestrator is strictly 'classic' or 'langgraph'."""
+        """Enforces that orchestrator is strictly 'langgraph'."""
         val = v.lower().strip()
-        if val not in ("classic", "langgraph"):
+        if val != "langgraph":
             raise ValueError(
-                f"Invalid ORCHESTRATOR={v!r}. Must be either 'classic' or 'langgraph'."
+                f"Invalid ORCHESTRATOR={v!r}. The classic linear flow has been removed; only 'langgraph' is supported."
             )
         return val
 
@@ -165,6 +192,39 @@ class Settings(BaseSettings):
         if val not in ("b", "c"):
             raise ValueError(
                 f"Invalid RERANKER_MODEL={v!r}. Must be either 'b' or 'c'."
+            )
+        return val
+
+    @field_validator("rewrite_mode")
+    @classmethod
+    def validate_rewrite_mode(cls, v: str) -> str:
+        """Enforces that rewrite_mode is strictly 'replace' or 'both'."""
+        val = v.lower().strip()
+        if val not in ("replace", "both"):
+            raise ValueError(
+                f"Invalid REWRITE_MODE={v!r}. Must be either 'replace' or 'both'."
+            )
+        return val
+
+    @field_validator("rewrite_backend")
+    @classmethod
+    def validate_rewrite_backend(cls, v: str) -> str:
+        """Enforces that rewrite_backend is 'llm', 'heuristic', or 'llm_then_heuristic'."""
+        val = v.lower().strip()
+        if val not in ("llm", "heuristic", "llm_then_heuristic"):
+            raise ValueError(
+                f"Invalid REWRITE_BACKEND={v!r}. Must be 'llm', 'heuristic', or 'llm_then_heuristic'."
+            )
+        return val
+
+    @field_validator("heuristic_variant")
+    @classmethod
+    def validate_heuristic_variant(cls, v: str) -> str:
+        """Enforces that heuristic_variant is in ('a', 'b', 'c', 'd', 'e', 'f')."""
+        val = v.lower().strip()
+        if val not in ("a", "b", "c", "d", "e", "f"):
+            raise ValueError(
+                f"Invalid HEURISTIC_VARIANT={v!r}. Must be 'a', 'b', 'c', 'd', 'e', or 'f'."
             )
         return val
 

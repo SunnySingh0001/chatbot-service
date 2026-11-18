@@ -1,0 +1,19 @@
+# tests/user_followups.yaml
+# Template for adding custom real-world follow-up queries for evaluation.
+# Schema per test case:
+# - id: unique_id_string (e.g. user_mf_01)
+#   category: multi_turn
+#   question: "Follow-up question"
+#   role: employee  # employee | hr
+#   history:
+#     - role: user
+#       content: "Prior user question"
+#     - role: assistant
+#       content: "Prior assistant answer"
+#   expected_sources: ["employee_handbook.md"]
+#   expected_phrase: "phrase from document"
+#   any_of:  # optional fallback phrase matches
+#     - phrase: "alternate phrase"
+#
+# When this list has entries, the evaluation harness automatically benchmarks them as a distinct evaluation group.
+[]

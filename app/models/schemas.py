@@ -72,4 +72,8 @@ class HealthResponse(BaseModel):
 
     status: str = Field(default="ok", description="Overall service status")
     version: str = Field(default="1.0.0", description="Application release version")
-    orchestrator: str = Field(default="classic", description="Active orchestrator mode")
+    orchestrator: str = Field(default="langgraph", description="Active orchestrator mode")
+    llm_provider: str = Field(
+        default="mock",
+        description="Active LLM provider: mock | groq | openai | gemini",
+    )

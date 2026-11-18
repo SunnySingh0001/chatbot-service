@@ -43,3 +43,10 @@ pytest==9.2.0
 # ── Optional Orchestrator (Phase 6) ───────────────────────────────────────────
 # langgraph: stateful graph pipeline orchestrator for ORCHESTRATOR=langgraph mode
 langgraph==1.2.22
+
+# ── MongoDB Client ────────────────────────────────────────────────────────────
+# pymongo: official Python driver for MongoDB database queries and ingestion
+pymongo==4.20.0
+# dnspython: DNS toolkit required by pymongo for mongodb+srv / replica-set resolution
+dnspython==2.9.2
+

@@ -31,13 +31,25 @@ def authorize_node(state: ChatState) -> dict[str, Any]:
     return {"status": "authorized"}
 
 
+def condense_query_node(state: ChatState) -> dict[str, Any]:
+    """Condenses follow-up question into standalone search query if rewriting is active."""
+    from app.rag.condense import condense_query  # noqa: PLC0415
+
+    q = state.get("question", "")
+    hist = state.get("history", [])
+    search_q = condense_query(q, hist)
+    return {"search_query": search_q}
+
+
 def retrieve_node(state: ChatState) -> dict[str, Any]:
     """Retrieves document chunks using role-filtered query, skipping on denied access."""
     if state.get("status") == "denied" or not state.get("role"):
         return {"chunks": [], "sources": []}
 
+    orig_q = state.get("question", "")
+    q = state.get("search_query") or orig_q
     try:
-        chunks = retrieve(state["question"], role=state["role"])
+        chunks = retrieve(q, role=state["role"], original_query=orig_q)
     except Exception as exc:
         _logger.error("Retrieval error encountered (fail-closed): %s", type(exc).__name__)
         return {"chunks": [], "sources": []}

@@ -202,6 +202,31 @@ def _fuse_reciprocal_rank(
     return [chunk_map[k] for k in fused_keys[:candidate_limit]]
 
 
+def _fuse_query_lists(
+    list_a: list[RetrievedChunk],
+    list_b: list[RetrievedChunk],
+    candidate_limit: int,
+    rrf_k: int = 60,
+) -> list[RetrievedChunk]:
+    """Combines two candidate lists from multi-query retrieval using Reciprocal Rank Fusion."""
+    rrf_scores: dict[tuple[str, int], float] = {}
+    chunk_map: dict[tuple[str, int], RetrievedChunk] = {}
+
+    for rank, chunk in enumerate(list_a, start=1):
+        key = (chunk.source, chunk.chunk_index)
+        rrf_scores[key] = rrf_scores.get(key, 0.0) + 1.0 / (rrf_k + rank)
+        chunk_map[key] = chunk
+
+    for rank, chunk in enumerate(list_b, start=1):
+        key = (chunk.source, chunk.chunk_index)
+        rrf_scores[key] = rrf_scores.get(key, 0.0) + 1.0 / (rrf_k + rank)
+        if key not in chunk_map or (chunk.score is not None and (chunk_map[key].score is None or chunk.score > chunk_map[key].score)):
+            chunk_map[key] = chunk
+
+    fused_keys = sorted(rrf_scores.keys(), key=lambda k: rrf_scores[k], reverse=True)
+    return [chunk_map[k] for k in fused_keys[:candidate_limit]]
+
+
 def _query_vector_store(
     collection: chromadb.Collection, query: str, where: dict[str, object], n: int
 ) -> list[RetrievedChunk]:
@@ -299,6 +324,48 @@ def _fetch_candidate_pool(
     return vector_chunks[:cand_count]
 
 
+def _open_accessible_collection(
+    role: str, mode: str | None, table_max_rows: int | None
+) -> tuple[chromadb.Collection, dict[str, object]] | None:
+    """Opens ChromaDB collection and builds role permission filter, returning None on access failure."""
+    try:
+        where = _build_where_clause(role)
+        collection = _open_collection(mode=mode, table_max_rows=table_max_rows)
+    except (PermissionError, Exception):
+        return None
+    return (collection, where) if collection.count() > 0 else None
+
+
+def _fuse_secondary_query(
+    candidates: list[RetrievedChunk],
+    collection: chromadb.Collection,
+    original_query: str | None,
+    query: str,
+    where: dict[str, object],
+    role: str,
+    mode: str | None,
+    table_max_rows: int | None,
+    is_hybrid: bool,
+    cand_count: int,
+    cand_limit: int,
+    thresh: float,
+) -> list[RetrievedChunk]:
+    """Retrieves candidates for secondary original query and fuses via RRF in both mode."""
+    from app.rag.prompt import is_greeting  # noqa: PLC0415
+
+    if (
+        settings.rewrite_mode == "both"
+        and original_query
+        and original_query.strip().lower() != query.strip().lower()
+        and not is_greeting(original_query)
+    ):
+        orig_cands = _fetch_candidate_pool(
+            collection, original_query, where, role, mode, table_max_rows, is_hybrid, cand_count, cand_limit, thresh
+        )
+        return _fuse_query_lists(candidates, orig_cands, candidate_limit=cand_count)
+    return candidates
+
+
 def retrieve(
     query: str,
     role: str,
@@ -311,36 +378,32 @@ def retrieve(
     reranker_model: str | None = None,
     grader: bool | None = None,
     rerank_min_score: float | None = None,
+    original_query: str | None = None,
 ) -> list[RetrievedChunk]:
     """Queries ChromaDB with role permissions, fusing BM25, reranking, and grading."""
     from app.rag.prompt import is_greeting  # noqa: PLC0415
 
-    if is_greeting(query):
+    col_info = _open_accessible_collection(role, mode, table_max_rows)
+    if is_greeting(query) or col_info is None:
         return []
-    try:
-        where = _build_where_clause(role)
-        collection = _open_collection(mode=mode, table_max_rows=table_max_rows)
-    except (PermissionError, Exception):
-        return []
-    if collection.count() == 0:
-        return []
+    collection, where = col_info
 
-    is_hybrid = settings.hybrid_search if hybrid_search is None else hybrid_search
-    is_rerank = settings.reranker if reranker is None else reranker
-    is_grader = settings.grader if grader is None else grader
+    is_hyb = settings.hybrid_search if hybrid_search is None else hybrid_search
+    is_rr = settings.reranker if reranker is None else reranker
+    is_gr = settings.grader if grader is None else grader
 
-    req_k = top_k if top_k is not None else (settings.rerank_top_k if is_rerank else settings.rag_top_k)
-    cand_count = settings.rerank_candidates if is_rerank else req_k
-    cand_limit = max(cand_count, settings.hybrid_candidates) if is_hybrid else cand_count
+    req_k = top_k if top_k is not None else (settings.rerank_top_k if is_rr else settings.rag_top_k)
+    cand_cnt = settings.rerank_candidates if is_rr else req_k
+    cand_lim = max(cand_cnt, settings.hybrid_candidates) if is_hyb else cand_cnt
     thresh = settings.rag_score_threshold if score_threshold is None else score_threshold
 
     candidates = _fetch_candidate_pool(
-        collection, query, where, role, mode, table_max_rows, is_hybrid, cand_count, cand_limit, thresh
+        collection, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
     )
-    if not candidates or not is_rerank:
+    candidates = _fuse_secondary_query(
+        candidates, collection, original_query, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
+    )
+    if not candidates or not is_rr:
         return candidates[:req_k]
-
-    return _apply_rerank_and_grade(
-        candidates, query, reranker_model, is_grader, rerank_min_score, thresh, req_k
-    )
+    return _apply_rerank_and_grade(candidates, query, reranker_model, is_gr, rerank_min_score, thresh, req_k)
 

@@ -50,10 +50,10 @@ def _validate_collection_model_on_startup() -> None:
 
 
 def _validate_orchestrator_on_startup() -> None:
-    """Verifies that configured orchestrator is strictly 'classic' or 'langgraph'."""
-    if settings.orchestrator not in ("classic", "langgraph"):
+    """Verifies that configured orchestrator is strictly 'langgraph'."""
+    if settings.orchestrator != "langgraph":
         raise RuntimeError(
-            f"Invalid ORCHESTRATOR={settings.orchestrator!r}. Must be 'classic' or 'langgraph'."
+            f"Invalid ORCHESTRATOR={settings.orchestrator!r}. Only 'langgraph' is supported."
         )
 
 

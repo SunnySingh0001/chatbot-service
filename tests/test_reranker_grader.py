@@ -12,6 +12,7 @@ from app.rag.reranker import get_reranker, rerank_chunks
 from app.rag.retriever import RetrievedChunk, retrieve
 
 
+@pytest.mark.slow
 def test_employee_reranker_never_leaks_hr_content() -> None:
     """Ensures employee role cannot see HR content before or after reranking."""
     chunks = retrieve(
@@ -26,16 +27,18 @@ def test_employee_reranker_never_leaks_hr_content() -> None:
 
 
 def test_reranker_never_receives_unauthorized_chunks() -> None:
-    """Verifies that the reranker model input pool contains strictly role-filtered passages."""
-    reranker = get_reranker("b")
+    """Verifies with a fake reranker that the reranker input pool contains strictly role-filtered passages."""
     observed_passages: list[str] = []
 
-    def mock_score(query: str, passages: list[str]) -> list[float]:
-        """Collects received passages and returns mock neutral probabilities."""
-        observed_passages.extend(passages)
-        return [0.5] * len(passages)
+    class FakeReranker:
+        """Lightweight non-model reranker capturing passages without disk or ONNX loading."""
 
-    with patch.object(reranker, "score_pairs", side_effect=mock_score):
+        def score_pairs(self, query: str, passages: list[str]) -> list[float]:
+            """Captures candidate passages and returns dummy scores."""
+            observed_passages.extend(passages)
+            return [0.5] * len(passages)
+
+    with patch("app.rag.reranker.get_reranker", return_value=FakeReranker()):
         retrieve(
             "L1 salary band details",
             role="employee",
@@ -71,6 +74,7 @@ def test_unknown_role_rejected_with_reranker() -> None:
     assert retrieve("VPN setup", role="guest", reranker=True) == []
 
 
+@pytest.mark.slow
 def test_reranker_model_b_and_c_both_rank_chunks() -> None:
     """Verifies that both Model B and Model C execute scoring and rank candidates."""
     chunks = [
@@ -86,28 +90,6 @@ def test_reranker_model_b_and_c_both_rank_chunks() -> None:
     assert len(ranked_c) == 2
     assert ranked_c[0].source == "leave.md"
     assert ranked_c[0].rerank_score is not None
-
-
-def test_grader_no_passing_chunk_skips_llm_classic() -> None:
-    """Asserts that in classic mode with GRADER=on, a non-passing query skips the LLM call."""
-    client = TestClient(app)
-    token = create_access_token("test_user", "employee")
-    headers = {"Authorization": f"Bearer {token}"}
-
-    with patch("app.api.chat.stream_llm") as mock_llm:
-        with patch.object(settings, "orchestrator", "classic"):
-            with patch.object(settings, "reranker", True):
-                with patch.object(settings, "reranker_model", "c"):
-                    with patch.object(settings, "grader", True):
-                        with patch.object(settings, "rerank_min_score", 0.999):
-                            resp = client.post(
-                                "/chat",
-                                json={"message": "What is the capital of Mars?"},
-                                headers=headers,
-                            )
-                            assert resp.status_code == 200
-                            mock_llm.assert_not_called()
-                            assert "enough information" in resp.text
 
 
 def test_grader_no_passing_chunk_skips_llm_langgraph() -> None:

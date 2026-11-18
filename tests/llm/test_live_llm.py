@@ -30,7 +30,7 @@ def _parse_sse(text: str) -> tuple[str, list[str]]:
 
 
 @pytest.mark.skip(reason=_SKIP_REASON)
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_live_llm_employee_query(mode: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies that live LLM streaming produces grounded answer in both modes."""
     monkeypatch.setattr(settings, "orchestrator", mode)
@@ -47,7 +47,7 @@ def test_live_llm_employee_query(mode: str, monkeypatch: pytest.MonkeyPatch) -> 
 
 
 @pytest.mark.skip(reason=_SKIP_REASON)
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_live_llm_hr_query(mode: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies that live LLM streaming returns confidential HR sources for HR role in both modes."""
     monkeypatch.setattr(settings, "orchestrator", mode)

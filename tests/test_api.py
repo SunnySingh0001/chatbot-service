@@ -22,9 +22,9 @@ def force_mock_llm(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "rag_score_threshold", 0.80)
 
 
-@pytest.fixture(params=["classic", "langgraph"])
+@pytest.fixture(params=["langgraph"])
 def orchestrator_mode(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> str:
-    """Runs test in both 'classic' and 'langgraph' orchestrator modes."""
+    """Runs test in 'langgraph' orchestrator mode."""
     mode: str = request.param
     monkeypatch.setattr(settings, "orchestrator", mode)
     return mode
@@ -45,13 +45,32 @@ def _parse_sse(raw_text: str) -> tuple[str, list[str]]:
 
 
 def test_health_endpoint(orchestrator_mode: str) -> None:
-    """Verifies that GET /health returns 200 with status ok and active orchestrator."""
+    """Verifies that GET /health returns 200 with status ok, active orchestrator, and llm_provider."""
     resp = client.get("/health")
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
     assert data["version"] == "1.0.0"
     assert data["orchestrator"] == orchestrator_mode
+    assert data["llm_provider"] in ("mock", "groq", "openai", "gemini")
+
+
+def test_health_llm_provider_resolution(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies that placeholder or missing keys resolve to 'mock' and never leak secrets."""
+    # When configured for groq but with placeholder key
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "your-groq-api-key-here")
+    resp = client.get("/health")
+    assert resp.json()["llm_provider"] == "mock"
+    assert "your-groq" not in resp.text
+
+    # When configured with a valid key
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "gsk_test_valid_fake_key_12345")
+    resp_valid = client.get("/health")
+    assert resp_valid.json()["llm_provider"] == "groq"
+    assert "gsk_test" not in resp_valid.text
+
 
 
 def test_chat_unauthorized(orchestrator_mode: str) -> None:

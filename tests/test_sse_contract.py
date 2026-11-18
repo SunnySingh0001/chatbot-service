@@ -1,4 +1,4 @@
-"""SSE protocol contract and delimiter injection tests across classic and langgraph modes."""
+"""SSE protocol contract and delimiter injection tests via LangGraph orchestrator."""
 from __future__ import annotations
 
 import json
@@ -25,7 +25,7 @@ def force_mock_llm(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("time.sleep", lambda _: None)
 
 
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_sse_contract_format_and_single_done_event(mode: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies incremental token events followed by exactly one terminal done event."""
     monkeypatch.setattr(settings, "orchestrator", mode)
@@ -49,7 +49,7 @@ def test_sse_contract_format_and_single_done_event(mode: str, monkeypatch: pytes
     assert events[-1]["done"] is True, "Terminal event must be the done event"
 
 
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_sse_contract_sources_empty_when_no_chunks(mode: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies that queries with no chunks return empty sources and fallback message."""
     monkeypatch.setattr(settings, "orchestrator", mode)
@@ -104,7 +104,7 @@ async def test_sse_contract_client_disconnect_stops_generation() -> None:
     assert not any('"done": true' in ev for ev in yielded_events)
 
 
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_injection_delimiters_stay_escaped(mode: str, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies that prompt injection delimiters stay safely escaped in both modes."""
     monkeypatch.setattr(settings, "orchestrator", mode)

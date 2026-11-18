@@ -21,9 +21,9 @@ def force_mock_llm(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "llm_provider", "mock")
 
 
-@pytest.fixture(params=["classic", "langgraph"])
+@pytest.fixture(params=["langgraph"])
 def orchestrator_mode(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> str:
-    """Runs test in both 'classic' and 'langgraph' orchestrator modes."""
+    """Runs test in 'langgraph' orchestrator mode."""
     mode: str = request.param
     monkeypatch.setattr(settings, "orchestrator", mode)
     return mode

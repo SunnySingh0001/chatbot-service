@@ -50,4 +50,7 @@ logs/
 
 models/
 scratch/
+eval_results/rewritten_queries.json
+eval_results/*cache*.json
+
 

@@ -15,6 +15,36 @@ def _has_valid_key(key: str) -> bool:
     return bool(key and not key.strip().startswith("your-"))
 
 
+def get_active_llm_provider() -> str:
+    """Returns effective active LLM provider; missing or placeholder keys return 'mock'."""
+    raw = settings.llm_provider.lower().strip()
+    if raw == "groq" and _has_valid_key(settings.groq_api_key):
+        return "groq"
+    if raw == "openai" and _has_valid_key(settings.openai_api_key):
+        return "openai"
+    if raw == "gemini" and _has_valid_key(settings.gemini_api_key):
+        return "gemini"
+    return "mock"
+
+
+def complete_llm(
+    messages: list[dict[str, str]],
+    max_tokens: int = 80,
+    temperature: float = 0.0,
+    timeout: float = 8.0,
+    model: str | None = None,
+) -> str:
+    """Executes a single non-streaming completion through the active LLM provider gateway."""
+    active = get_active_llm_provider()
+    if active == "groq":
+        return _complete_groq(messages, max_tokens, temperature, timeout, model=model)
+    if active == "openai":
+        return _complete_openai(messages, max_tokens, temperature, timeout, model=model)
+    if active == "gemini":
+        return _complete_gemini(messages, max_tokens, temperature, timeout, model=model)
+    return _complete_mock(messages)
+
+
 def stream_llm(messages: list[dict[str, str]]) -> Generator[str, None, None]:
     """Routes to the configured provider and streams response tokens."""
     provider = settings.llm_provider.lower()
@@ -184,4 +214,80 @@ def _stream_gemini(messages: list[dict[str, str]]) -> Generator[str, None, None]
     for chunk in response:
         if chunk.text:
             yield chunk.text
+
+
+def _complete_groq(
+    messages: list[dict[str, str]],
+    max_tokens: int,
+    temperature: float,
+    timeout: float,
+    model: str | None = None,
+) -> str:
+    """Completes query rewrite via Groq chat completions API."""
+    from groq import Groq  # noqa: PLC0415
+
+    client = Groq(api_key=settings.groq_api_key, timeout=timeout, max_retries=0)
+    target_model = model or settings.rewrite_model or settings.llm_model
+    kwargs: dict[str, object] = {
+        "model": target_model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if target_model.startswith("openai/gpt-oss-"):
+        kwargs["reasoning_effort"] = "low"
+    resp = client.chat.completions.create(**kwargs)  # type: ignore[arg-type]
+    return resp.choices[0].message.content or ""
+
+
+def _complete_openai(
+    messages: list[dict[str, str]],
+    max_tokens: int,
+    temperature: float,
+    timeout: float,
+    model: str | None = None,
+) -> str:
+    """Completes query rewrite via OpenAI chat completions API."""
+    from openai import OpenAI  # noqa: PLC0415
+
+    client = OpenAI(api_key=settings.openai_api_key, timeout=timeout)
+    target_model = model or settings.rewrite_model or settings.llm_model
+    resp = client.chat.completions.create(
+        model=target_model,
+        messages=messages,  # type: ignore[arg-type]
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    return resp.choices[0].message.content or ""
+
+
+def _complete_gemini(
+    messages: list[dict[str, str]],
+    max_tokens: int,
+    temperature: float,
+    timeout: float,
+    model: str | None = None,
+) -> str:
+    """Completes query rewrite via Google Gemini generative API."""
+    import google.generativeai as genai  # noqa: PLC0415
+
+    genai.configure(api_key=settings.gemini_api_key)
+    target_model = model or settings.rewrite_model or settings.llm_model
+    system_content = next((m["content"] for m in messages if m["role"] == "system"), "")
+    non_system = [m for m in messages if m["role"] != "system"]
+    gemini_model = genai.GenerativeModel(
+        model_name=target_model,
+        system_instruction=system_content if system_content else None,
+        generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
+    )
+    user_prompt = non_system[-1]["content"] if non_system else ""
+    resp = gemini_model.generate_content(user_prompt, request_options={"timeout": timeout})
+    return resp.text or ""
+
+
+def _complete_mock(messages: list[dict[str, str]]) -> str:
+    """Returns deterministic mock completion text."""
+    user_msg = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
+    return user_msg
+
 

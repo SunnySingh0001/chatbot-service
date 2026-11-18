@@ -5,11 +5,17 @@ from fastapi import APIRouter
 
 from app.config import settings
 from app.models.schemas import HealthResponse
+from app.rag.llm import get_active_llm_provider
 
 router = APIRouter(tags=["Health"])
 
 
 @router.get("/health", response_model=HealthResponse)
 def get_health() -> HealthResponse:
-    """Returns current service health status, API version, and active orchestrator."""
-    return HealthResponse(status="ok", version="1.0.0", orchestrator=settings.orchestrator)
+    """Returns current service health status, API version, orchestrator, and active LLM provider."""
+    return HealthResponse(
+        status="ok",
+        version="1.0.0",
+        orchestrator=settings.orchestrator,
+        llm_provider=get_active_llm_provider(),
+    )

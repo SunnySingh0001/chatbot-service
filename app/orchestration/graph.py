@@ -9,6 +9,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from app.orchestration.nodes import (
     authorize_node,
+    condense_query_node,
     finalize_node,
     generate_node,
     no_context_node,
@@ -26,13 +27,15 @@ def build_chat_graph() -> CompiledStateGraph:
     workflow: StateGraph[ChatState] = StateGraph(ChatState)
 
     workflow.add_node("authorize", authorize_node)
+    workflow.add_node("condense_query", condense_query_node)
     workflow.add_node("retrieve", retrieve_node)
     workflow.add_node("no_context", no_context_node)
     workflow.add_node("generate", generate_node)
     workflow.add_node("finalize", finalize_node)
 
     workflow.add_edge(START, "authorize")
-    workflow.add_edge("authorize", "retrieve")
+    workflow.add_edge("authorize", "condense_query")
+    workflow.add_edge("condense_query", "retrieve")
     workflow.add_conditional_edges(
         "retrieve",
         route_after_retrieve,

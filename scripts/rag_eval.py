@@ -62,6 +62,16 @@ def _strip_prefix(text: str) -> str:
     return stripped
 
 
+def _normalize_eval_text(text: str) -> str:
+    """Normalizes markdown syntax, dashes, whitespace, and case for robust phrase matching."""
+    if not text:
+        return ""
+    cleaned = re.sub(r"[\*_`]+", "", text)
+    cleaned = re.sub(r"[\u2010-\u2015\u2212]", "-", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned)
+    return cleaned.strip().lower()
+
+
 def _is_chunk_match(
     chunk: RetrievedChunk,
     sources: list[str],
@@ -69,11 +79,11 @@ def _is_chunk_match(
     any_of: list[dict[str, str]] | None = None,
 ) -> bool:
     """Checks whether an individual chunk matches any acceptable (source, phrase) definition."""
-    clean = _strip_prefix(chunk.text).lower()
+    clean = _normalize_eval_text(_strip_prefix(chunk.text))
     if any_of:
         for opt in any_of:
             opt_src = opt.get("source")
-            opt_phrase = opt.get("phrase", "").strip().lower()
+            opt_phrase = _normalize_eval_text(opt.get("phrase", ""))
             src_ok = (not opt_src) or (chunk.source == opt_src)
             phrase_ok = (not opt_phrase) or (opt_phrase in clean)
             if src_ok and phrase_ok:
@@ -81,7 +91,8 @@ def _is_chunk_match(
         return False
 
     src_ok = (not sources) or (chunk.source in sources)
-    phrase_ok = (not phrase) or (phrase in clean)
+    norm_phrase = _normalize_eval_text(phrase)
+    phrase_ok = (not norm_phrase) or (norm_phrase in clean)
     return bool(src_ok and phrase_ok)
 
 

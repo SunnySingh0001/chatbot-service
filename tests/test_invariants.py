@@ -171,11 +171,11 @@ def test_invariant_malicious_chunk_treated_as_data() -> None:
     assert "http://evil.example/steal?token=123" in context_slice
 
 
-@pytest.mark.parametrize("mode", ["classic", "langgraph"])
+@pytest.mark.parametrize("mode", ["langgraph"])
 def test_invariant_logs_contain_no_secrets_or_raw_tokens(
     mode: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verifies that neither mode logs JWT tokens, secrets, or API credentials."""
+    """Verifies that orchestrator logs contain no JWT tokens, secrets, or API credentials."""
     monkeypatch.setattr(settings, "orchestrator", mode)
     token = create_access_token(user_id="audit_user", role="employee")
     headers = {"Authorization": f"Bearer {token}"}
