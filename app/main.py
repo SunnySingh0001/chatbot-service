@@ -12,6 +12,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.chat import router as chat_router
 from app.api.health import router as health_router
+from app.api.sync import router as sync_router
 from app.config import settings
 from app.middleware.rate_limit import limiter
 
@@ -57,12 +58,38 @@ def _validate_orchestrator_on_startup() -> None:
         )
 
 
+import asyncio
+
+
+async def _periodic_mongo_sync() -> None:
+    """Periodically synchronizes MongoDB Atlas data to ChromaDB every 6 hours."""
+    from app.rag.mongo_ingest import sync_mongodb_to_rag  # noqa: PLC0415
+
+    while True:
+        try:
+            await asyncio.sleep(6 * 3600)
+            await asyncio.to_thread(sync_mongodb_to_rag, purge_legacy=False)
+        except asyncio.CancelledError:
+            break
+        except Exception:
+            pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Runs startup checks and lifespan management."""
     _validate_orchestrator_on_startup()
     _validate_collection_model_on_startup()
-    yield
+    sync_task = asyncio.create_task(_periodic_mongo_sync())
+    try:
+        yield
+    finally:
+        sync_task.cancel()
+        try:
+            await sync_task
+        except asyncio.CancelledError:
+            pass
+            pass
 
 
 def create_app() -> FastAPI:
@@ -91,6 +118,7 @@ def create_app() -> FastAPI:
     # Mount routes
     application.include_router(health_router)
     application.include_router(chat_router)
+    application.include_router(sync_router)
 
     return application
 

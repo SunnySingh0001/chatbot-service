@@ -1,6 +1,4 @@
 """Loads all application settings from environment variables / .env file."""
-import os
-
 from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -64,6 +62,8 @@ class Settings(BaseSettings):
     cors_origins: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]

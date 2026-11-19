@@ -8,7 +8,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import sys
 
 from app.rag.llm import stream_llm
 from app.rag.prompt import build_messages, build_no_context_messages
@@ -26,7 +25,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--role",
         default="employee",
-        choices=["employee", "hr", "it"],
+        choices=["employee", "hr", "it", "finance", "operations", "admin", "super-admin", "superadmin", "founder"],
         help="Caller's role (controls which docs are accessible). Default: employee",
     )
     return parser.parse_args()

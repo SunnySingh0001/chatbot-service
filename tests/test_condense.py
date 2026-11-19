@@ -242,9 +242,15 @@ def test_is_code_stub_classification() -> None:
     assert is_code_stub("probaton perod") is False
 
 
-def test_is_topic_switch_strict_list() -> None:
+def test_is_topic_switch_strict_list(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verifies that strict topic switch check rejects genuine follow-ups and flags true switches."""
-    from app.rag.condense import is_topic_switch
+    from app.rag import condense
+    monkeypatch.setattr(
+        condense,
+        "get_corpus_vocabulary",
+        lambda: {"password", "requirements", "probation", "period"},
+    )
+    is_topic_switch = condense.is_topic_switch
 
     genuine_followups = [
         "kitne din?",

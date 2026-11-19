@@ -11,7 +11,14 @@ from app.config import settings
 from app.middleware.logging import log_interaction
 from app.orchestration.state import ChatState
 from app.rag.llm import stream_llm
-from app.rag.prompt import FALLBACK_RESPONSES, build_messages, get_no_context_message
+from app.rag.prompt import (
+    FALLBACK_RESPONSES,
+    build_messages,
+    get_no_context_message,
+    get_self_identity_response,
+    is_greeting,
+    is_self_identity_query,
+)
 from app.rag.retriever import ROLE_ACCESS, retrieve
 
 _logger = logging.getLogger("chatbot.orchestration.nodes")
@@ -59,15 +66,26 @@ def retrieve_node(state: ChatState) -> dict[str, Any]:
 
 
 def route_after_retrieve(state: ChatState) -> str:
-    """Routes to no_context if chunks are empty or access denied; otherwise routes to generate."""
-    if state.get("status") == "denied" or not state.get("chunks"):
+    """Routes to no_context if chunks are empty, access denied, or greeting/self-identity query."""
+    if state.get("status") == "denied":
+        return "no_context"
+    q = state.get("question", "")
+    if is_greeting(q) or is_self_identity_query(q):
+        return "no_context"
+    if not state.get("chunks"):
         return "no_context"
     return "generate"
 
 
 def no_context_node(state: ChatState, writer: StreamWriter = lambda _: None) -> dict[str, Any]:
-    """Sets standard fallback message or greeting without making any external LLM call."""
-    msg = get_no_context_message(state.get("question", ""))
+    """Sets standard fallback message, greeting, or self-identity without making any LLM call."""
+    q = state.get("question", "")
+    user_id = str(state.get("user_id", ""))
+    role = str(state.get("role", ""))
+    if is_self_identity_query(q):
+        msg = get_self_identity_response(q, user_id, role)
+    else:
+        msg = get_no_context_message(q)
     writer({"token": msg})
     return {"answer_text": msg, "status": "no_context"}
 
@@ -75,7 +93,8 @@ def no_context_node(state: ChatState, writer: StreamWriter = lambda _: None) -> 
 def generate_node(state: ChatState, writer: StreamWriter = lambda _: None) -> dict[str, Any]:
     """Streams answer tokens from LLM gateway using prompt builder with escaped context."""
     history = state.get("history") or []
-    messages = build_messages(state["question"], state["chunks"], history)
+    question = state.get("search_query") or state.get("question", "")
+    messages = build_messages(question, state["chunks"], history)
 
     token_count = 0
     collected_tokens: list[str] = []

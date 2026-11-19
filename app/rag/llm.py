@@ -151,21 +151,43 @@ def _stream_mock(
 # ── Provider implementations ──────────────────────────────────────────────────
 # Lazy imports so missing provider SDKs don't crash at startup.
 
+def _get_groq_models(primary: str) -> list[str]:
+    """Returns candidate Groq models in prioritized fallback order."""
+    candidates = [primary, "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
+    seen: set[str] = set()
+    result: list[str] = []
+    for m in candidates:
+        if m and m not in seen:
+            seen.add(m)
+            result.append(m)
+    return result
+
+
 def _stream_groq(messages: list[dict[str, str]]) -> Generator[str, None, None]:
-    """Streams tokens from Groq's chat completions API."""
-    from groq import Groq  # noqa: PLC0415
+    """Streams tokens from Groq API with automatic fallback on rate limits."""
+    from groq import APIStatusError, Groq, RateLimitError  # noqa: PLC0415
 
     client = Groq(api_key=settings.groq_api_key)
-    stream = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=messages,  # type: ignore[arg-type]
-        temperature=settings.llm_temperature,
-        stream=True,
-    )
-    for chunk in stream:
-        delta = chunk.choices[0].delta
-        if delta.content:
-            yield delta.content
+    models = _get_groq_models(settings.llm_model)
+    last_err: Exception | None = None
+    for model_name in models:
+        try:
+            stream = client.chat.completions.create(
+                model=model_name,
+                messages=messages,  # type: ignore[arg-type]
+                temperature=settings.llm_temperature,
+                stream=True,
+            )
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    yield delta.content
+            return
+        except (RateLimitError, APIStatusError) as exc:
+            last_err = exc
+            continue
+    if last_err:
+        raise last_err
 
 
 def _stream_openai(messages: list[dict[str, str]]) -> Generator[str, None, None]:
@@ -223,21 +245,31 @@ def _complete_groq(
     timeout: float,
     model: str | None = None,
 ) -> str:
-    """Completes query rewrite via Groq chat completions API."""
-    from groq import Groq  # noqa: PLC0415
+    """Completes query rewrite via Groq API with fallback on rate limits."""
+    from groq import APIStatusError, Groq, RateLimitError  # noqa: PLC0415
 
     client = Groq(api_key=settings.groq_api_key, timeout=timeout, max_retries=0)
-    target_model = model or settings.rewrite_model or settings.llm_model
-    kwargs: dict[str, object] = {
-        "model": target_model,
-        "messages": messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-    if target_model.startswith("openai/gpt-oss-"):
-        kwargs["reasoning_effort"] = "low"
-    resp = client.chat.completions.create(**kwargs)  # type: ignore[arg-type]
-    return resp.choices[0].message.content or ""
+    primary = model or settings.rewrite_model or settings.llm_model
+    models = _get_groq_models(primary)
+    last_err: Exception | None = None
+    for model_name in models:
+        try:
+            kwargs: dict[str, object] = {
+                "model": model_name,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+            if model_name.startswith("openai/gpt-oss-"):
+                kwargs["reasoning_effort"] = "low"
+            resp = client.chat.completions.create(**kwargs)  # type: ignore[arg-type]
+            return resp.choices[0].message.content or ""
+        except (RateLimitError, APIStatusError) as exc:
+            last_err = exc
+            continue
+    if last_err:
+        raise last_err
+    return ""
 
 
 def _complete_openai(

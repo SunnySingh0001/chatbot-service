@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     environment:
-      - ORCHESTRATOR=${ORCHESTRATOR:-classic}
+      - ORCHESTRATOR=${ORCHESTRATOR:-langgraph}
     volumes:
       - ./chroma_db:/app/chroma_db
     restart: unless-stopped

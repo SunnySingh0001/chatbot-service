@@ -8,6 +8,7 @@ never after the LLM has seen the results.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
 
 import chromadb
@@ -20,8 +21,16 @@ _logger = logging.getLogger("chatbot.retriever")
 # Maps each permitted role to its allowed access levels.
 # Single source of truth for all role definitions across the application.
 ROLE_ACCESS: dict[str, list[str]] = {
-    "employee": ["all"],
-    "hr": ["all", "hr"],
+    "client": ["all"],
+    "employee": ["all", "employee"],
+    "operations": ["all", "employee", "operations"],
+    "hr": ["all", "employee", "hr"],
+    "it": ["all", "employee", "it"],
+    "finance": ["all", "employee", "finance"],
+    "admin": ["all", "employee", "hr", "it", "finance", "operations"],
+    "super-admin": ["all", "employee", "hr", "it", "finance", "operations", "founder", "super-admin"],
+    "superadmin": ["all", "employee", "hr", "it", "finance", "operations", "founder", "super-admin"],
+    "founder": ["all", "employee", "hr", "it", "finance", "operations", "founder", "super-admin"],
 }
 
 
@@ -240,6 +249,18 @@ def _query_vector_store(
     return _parse_results(results)  # type: ignore[arg-type]
 
 
+def _clean_bm25_query(query: str) -> str:
+    """Strips conversational noise words to extract core search terms for BM25."""
+    noise = {
+        "have", "has", "had", "you", "your", "yours", "about", "know", "knowledge",
+        "tell", "give", "show", "please", "plz", "can", "could", "would", "do",
+        "does", "did", "is", "are", "was", "were", "the", "a", "an", "of", "to",
+        "in", "on", "at", "for", "from", "with", "by", "what", "who", "which",
+    }
+    words = [w for w in query.lower().split() if w.strip("?!.,") not in noise]
+    return " ".join(words) if words else query
+
+
 def _execute_hybrid_fusion(
     vector_chunks: list[RetrievedChunk],
     query: str,
@@ -254,7 +275,16 @@ def _execute_hybrid_fusion(
 
     col_name = get_collection_name(mode, table_max_rows=table_max_rows)
     bm25_index = get_bm25_index(col_name, role)
-    bm25_chunks = bm25_index.search(query, top_n=settings.hybrid_candidates)
+
+    cleaned_q = _clean_bm25_query(query)
+    bm25_chunks = bm25_index.search(cleaned_q, top_n=settings.hybrid_candidates)
+    if cleaned_q != query.lower():
+        orig_chunks = bm25_index.search(query, top_n=settings.hybrid_candidates)
+        seen = {(c.source, c.chunk_index) for c in bm25_chunks}
+        for c in orig_chunks:
+            if (c.source, c.chunk_index) not in seen:
+                bm25_chunks.append(c)
+                seen.add((c.source, c.chunk_index))
 
     embed_fn = get_embedding_function()
     embed_query = getattr(embed_fn, "embed_query", embed_fn)
@@ -297,6 +327,27 @@ def _apply_rerank_and_grade(
         and (c.score is None or thresh <= 0.0 or c.score >= thresh)
     ]
     return graded[:req_k]
+
+
+_DEEP_CHECK_STOPWORDS: frozenset[str] = frozenset({
+    "kaun", "kya", "kaise", "kahan", "kab", "kyun", "kisko", "kiska", "kiski",
+    "hai", "hain", "tha", "thi", "the", "hoga", "hogi", "hoge",
+    "batao", "bataiye", "bata", "bolo", "bologe", "de", "do", "dena", "dedo",
+    "mujhe", "mera", "meri", "mere", "hum", "humein", "hamara", "hamari", "hamare",
+    "aap", "aapka", "aapki", "aapke", "tum", "tumhara", "tumhari", "tumhare",
+    "unka", "unki", "unke", "uska", "uski", "uske", "yeh", "woh", "wo",
+    "ke", "ki", "ka", "ko", "se", "me", "mein", "par", "pe", "bhi", "aur",
+    "in", "on", "at", "to", "for", "of", "with", "from", "by", "about",
+    "who", "what", "where", "when", "why", "how", "is", "are", "was", "were",
+    "tell", "give", "show", "please", "plz", "details", "info", "information",
+})
+
+
+def _clean_for_deep_check(query: str) -> str:
+    """Extracts entity keywords from casual conversational queries for fallback deep search."""
+    tokens = re.findall(r"\b[\w-]+\b", query.lower())
+    kept = [w for w in tokens if w not in _DEEP_CHECK_STOPWORDS and len(w) > 1]
+    return " ".join(kept)
 
 
 def _fetch_candidate_pool(
@@ -366,6 +417,30 @@ def _fuse_secondary_query(
     return candidates
 
 
+def _run_deep_check(
+    collection: chromadb.Collection,
+    query: str,
+    where: dict[str, object],
+    role: str,
+    mode: str | None,
+    table_max_rows: int | None,
+    is_hyb: bool,
+    cand_cnt: int,
+    cand_lim: int,
+    thresh: float,
+) -> list[RetrievedChunk]:
+    """Executes Tier-2 fallback deep keyword search when primary retrieval yields no chunks."""
+    cleaned = _clean_for_deep_check(query)
+    if not cleaned or cleaned == query.strip().lower():
+        return []
+    rescued = _fetch_candidate_pool(
+        collection, cleaned, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh * 0.90
+    )
+    if rescued:
+        _logger.info("Tier-2 Deep Check rescued query %r using cleaned keywords %r", query, cleaned)
+    return rescued
+
+
 def retrieve(
     query: str,
     role: str,
@@ -403,6 +478,13 @@ def retrieve(
     candidates = _fuse_secondary_query(
         candidates, collection, original_query, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
     )
+    if not candidates and score_threshold is None:
+        from app.rag.prompt import detect_language  # noqa: PLC0415
+
+        if detect_language(query) in ("hinglish", "hindi"):
+            candidates = _run_deep_check(
+                collection, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
+            )
     if not candidates or not is_rr:
         return candidates[:req_k]
     return _apply_rerank_and_grade(candidates, query, reranker_model, is_gr, rerank_min_score, thresh, req_k)
