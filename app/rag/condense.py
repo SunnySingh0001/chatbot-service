@@ -15,9 +15,9 @@ _logger = logging.getLogger("chatbot.rag.condense")
 
 TRUE_REFERENCE_WORDS: set[str] = {
     # Pronouns that replace entities from previous conversation
-    "them", "they", "theirs", "these", "those", "this", "that",
+    "them", "they", "theirs", "these", "those", "this", "that", "it", "its",
     # Hindi / Hinglish anaphoric pronouns and demonstratives
-    "iska", "iske", "iski", "uska", "uske", "uski",
+    "isme", "iska", "iske", "iski", "uska", "uske", "uski",
     "unka", "unke", "unki", "inhe", "unhe", "usko", "isko",
     "ispe", "uspe", "inme", "unme", "usme", "wahi",
     "ye", "yeh", "woh", "isse", "usse",
@@ -359,19 +359,42 @@ def _rewrite_heuristic(
     return f"{question} {' '.join(clean_terms)}".strip() if clean_terms else question
 
 
+CLARIFICATION_PROMPT: str = "Could you please clarify what specific policy or module you are referring to?"
+
+
+def is_ambiguous_reference(question: str, history: list[dict[str, str]] | None) -> bool:
+    """Detects if query contains an anaphoric pronoun but lacks identifiable antecedent entities in history."""
+    q_lower = question.lower().strip()
+    words = set(re.findall(r"\w+", q_lower))
+    has_pronoun = any(p in words for p in TRUE_REFERENCE_WORDS) or any(p in q_lower for p in TRUE_REFERENCE_PHRASES)
+    if not has_pronoun:
+        return False
+    if not history:
+        return True
+    hist_text = " ".join(str(turn.get("content", "")) for turn in history).lower()
+    hist_words = [w for w in re.findall(r"\w+", hist_text) if len(w) > 3 and w not in _COMMON_STOPWORDS]
+    return len(hist_words) == 0
+
+
+def _extract_mock_keywords(history: list[dict[str, str]]) -> list[str]:
+    """Extracts up to 4 domain entity keywords from conversation history for mock rewrites."""
+    keywords: list[str] = []
+    for turn in reversed(history):
+        content = turn.get("content", "")
+        words = re.findall(r"\w+", content)
+        for w in words:
+            wl = w.lower()
+            if len(wl) > 3 and wl not in _MOCK_STOPWORDS and wl not in _COMMON_STOPWORDS:
+                if wl not in keywords:
+                    keywords.append(wl)
+                    if len(keywords) >= 4:
+                        return keywords
+    return keywords
+
+
 def _rewrite_mock(question: str, history: list[dict[str, str]]) -> str:
     """Deterministically appends topic keywords from previous user question for mock mode."""
-    last_user_q = ""
-    for turn in reversed(history):
-        if turn.get("role") == "user":
-            last_user_q = turn.get("content", "")
-            break
-
-    if not last_user_q:
-        return question
-
-    words = re.findall(r"\w+", last_user_q)
-    keywords = [w for w in words if len(w) > 3 and w.lower() not in _MOCK_STOPWORDS][:4]
+    keywords = _extract_mock_keywords(history)
     if not keywords:
         return question
     return f"{question} {' '.join(keywords)}".strip()
@@ -406,8 +429,16 @@ def _check_rewrite_bypass(
     if not settings.query_rewrite:
         return question, "skipped_disabled", 0.0
     if not history:
+        if is_ambiguous_reference(question, history):
+            dt = (time.perf_counter() - t0) * 1000.0
+            _logger.info("Rewrite result: status=ambiguous_reference latency_ms=%.1f", dt)
+            return CLARIFICATION_PROMPT, "ambiguous_reference", dt
         _logger.info("Rewrite result: status=skipped_no_history latency_ms=0.0")
         return question, "skipped_no_history", 0.0
+    if is_ambiguous_reference(question, history):
+        dt = (time.perf_counter() - t0) * 1000.0
+        _logger.info("Rewrite result: status=ambiguous_reference latency_ms=%.1f", dt)
+        return CLARIFICATION_PROMPT, "ambiguous_reference", dt
     if is_code_stub(question):
         dt = (time.perf_counter() - t0) * 1000.0
         _logger.info("Rewrite result: status=skipped_code_stub latency_ms=%.1f", dt)

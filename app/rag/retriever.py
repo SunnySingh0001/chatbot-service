@@ -10,11 +10,15 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import chromadb
 
 from app.config import settings
 from app.rag.embedder import get_embedding_function
+
+if TYPE_CHECKING:
+    from app.rag.bm25 import BM25Index
 
 _logger = logging.getLogger("chatbot.retriever")
 
@@ -239,14 +243,36 @@ def _fuse_query_lists(
 def _query_vector_store(
     collection: chromadb.Collection, query: str, where: dict[str, object], n: int
 ) -> list[RetrievedChunk]:
-    """Queries collection and parses results into sorted RetrievedChunk objects."""
+    """Queries collection with query-prefixed embedding and parses results into sorted chunks."""
+    embed_fn = get_embedding_function()
+    embed_query = getattr(embed_fn, "embed_query", embed_fn)
+    query_embeddings = embed_query([query])
     results = collection.query(
-        query_texts=[query],
+        query_embeddings=query_embeddings,
         n_results=n,
         where=where,
         include=["documents", "metadatas", "distances"],
     )
     return _parse_results(results)  # type: ignore[arg-type]
+
+
+def _resolve_score_threshold(
+    query: str,
+    score_threshold: float | None,
+) -> float:
+    """Resolves language-aware similarity score threshold from query and configuration."""
+    if score_threshold is not None:
+        return score_threshold
+    from app.rag.prompt import detect_language  # noqa: PLC0415
+
+    lang = detect_language(query)
+    if lang == "hinglish" and settings.rag_score_threshold_hinglish is not None:
+        return settings.rag_score_threshold_hinglish
+    if lang == "hindi" and settings.rag_score_threshold_hindi is not None:
+        return settings.rag_score_threshold_hindi
+    if lang in ("hinglish", "hindi") and settings.rag_score_threshold_hinglish is None:
+        return min(settings.rag_score_threshold, 0.75)
+    return settings.rag_score_threshold
 
 
 def _clean_bm25_query(query: str) -> str:
@@ -261,21 +287,21 @@ def _clean_bm25_query(query: str) -> str:
     return " ".join(words) if words else query
 
 
-def _execute_hybrid_fusion(
+def _is_hybrid_pool_empty(
+    bm25_chunks: list[RetrievedChunk],
     vector_chunks: list[RetrievedChunk],
-    query: str,
-    role: str,
-    mode: str | None,
-    table_max_rows: int | None,
-    cand_limit: int,
-    req_k: int,
-) -> list[RetrievedChunk]:
-    """Retrieves BM25 candidates and fuses with vector candidates using RRF."""
-    from app.rag.bm25 import get_bm25_index  # noqa: PLC0415
+    thresh: float,
+) -> bool:
+    """Checks whether both BM25 candidates and vector candidates fail threshold criteria."""
+    if not bm25_chunks:
+        if thresh <= 0.0:
+            return not vector_chunks
+        return not vector_chunks or vector_chunks[0].score is None or vector_chunks[0].score < thresh
+    return False
 
-    col_name = get_collection_name(mode, table_max_rows=table_max_rows)
-    bm25_index = get_bm25_index(col_name, role)
 
+def _collect_bm25_candidates(bm25_index: BM25Index, query: str) -> list[RetrievedChunk]:
+    """Searches BM25 index with cleaned and original queries, deduplicating results."""
     cleaned_q = _clean_bm25_query(query)
     bm25_chunks = bm25_index.search(cleaned_q, top_n=settings.hybrid_candidates)
     if cleaned_q != query.lower():
@@ -285,6 +311,28 @@ def _execute_hybrid_fusion(
             if (c.source, c.chunk_index) not in seen:
                 bm25_chunks.append(c)
                 seen.add((c.source, c.chunk_index))
+    return bm25_chunks
+
+
+def _execute_hybrid_fusion(
+    vector_chunks: list[RetrievedChunk],
+    query: str,
+    role: str,
+    mode: str | None,
+    table_max_rows: int | None,
+    cand_limit: int,
+    req_k: int,
+    thresh: float = 0.0,
+) -> list[RetrievedChunk]:
+    """Retrieves BM25 candidates and fuses with vector candidates using RRF."""
+    from app.rag.bm25 import get_bm25_index  # noqa: PLC0415
+
+    col_name = get_collection_name(mode, table_max_rows=table_max_rows)
+    bm25_index = get_bm25_index(col_name, role)
+    bm25_chunks = _collect_bm25_candidates(bm25_index, query)
+
+    if _is_hybrid_pool_empty(bm25_chunks, vector_chunks, thresh):
+        return []
 
     embed_fn = get_embedding_function()
     embed_query = getattr(embed_fn, "embed_query", embed_fn)
@@ -366,12 +414,19 @@ def _fetch_candidate_pool(
     vector_chunks = _query_vector_store(
         collection, query, where, min(cand_limit, collection.count())
     )
-    if thresh > 0.0 and (not vector_chunks or vector_chunks[0].score is None or vector_chunks[0].score < thresh):
-        return []
     if is_hybrid:
         return _execute_hybrid_fusion(
-            vector_chunks, query, role, mode, table_max_rows, cand_limit, cand_count
+            vector_chunks,
+            query,
+            role,
+            mode,
+            table_max_rows,
+            cand_limit,
+            cand_count,
+            thresh=thresh,
         )
+    if thresh > 0.0 and (not vector_chunks or vector_chunks[0].score is None or vector_chunks[0].score < thresh):
+        return []
     return vector_chunks[:cand_count]
 
 
@@ -470,7 +525,7 @@ def retrieve(
     req_k = top_k if top_k is not None else (settings.rerank_top_k if is_rr else settings.rag_top_k)
     cand_cnt = settings.rerank_candidates if is_rr else req_k
     cand_lim = max(cand_cnt, settings.hybrid_candidates) if is_hyb else cand_cnt
-    thresh = settings.rag_score_threshold if score_threshold is None else score_threshold
+    thresh = _resolve_score_threshold(query, score_threshold)
 
     candidates = _fetch_candidate_pool(
         collection, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh

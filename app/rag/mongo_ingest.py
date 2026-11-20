@@ -11,6 +11,13 @@ from pymongo.database import Database
 from app.config import settings
 from app.rag.bm25 import invalidate_bm25_cache
 from app.rag.ingest import _get_collection, create_chunks
+from app.rag.mongo_catalog import (
+    APPROVED_COLLECTIONS,
+    CollectionSpec,
+    audit_mongo_collections,
+)
+from app.rag.mongo_serializer import serialize_mongo_document
+from app.rag.record_chunker import MongoChunk, chunk_record, compute_content_hash
 from app.rag.retriever import invalidate_collection_cache
 
 _logger = logging.getLogger("chatbot.rag.mongo_ingest")
@@ -876,8 +883,9 @@ def _upsert_category(
             "department": department,
             "access_level": access_level,
             "chunk_index": i,
+            "content_hash": compute_content_hash(text),
         }
-        for i in range(len(all_chunks))
+        for i, text in enumerate(all_chunks)
     ]
 
     try:
@@ -889,60 +897,127 @@ def _upsert_category(
     return len(all_chunks)
 
 
-def sync_mongodb_to_rag(purge_legacy: bool = True) -> int:
-    """Reads all knowledge collections exclusively from MongoDB Atlas and indexes into ChromaDB."""
+def ingest_collection_structured(
+    db: Database[dict[str, Any]],
+    spec: CollectionSpec,
+    chroma_col: Any,
+    batch_size: int = 100,
+) -> int:
+    """Ingests all records from an approved MongoDB collection using structured serialization and chunking."""
+    docs = list(db[spec.name].find({}))
+    if not docs:
+        return 0
+
+    all_chunks: list[MongoChunk] = []
+    for doc in docs:
+        try:
+            if not isinstance(doc, dict) or not doc:
+                continue
+            serialized = serialize_mongo_document(doc, collection_name=spec.name)
+            record_chunks = chunk_record(
+                doc,
+                serialized,
+                collection_name=spec.name,
+                department=spec.department,
+                access_level=spec.access_level,
+            )
+            all_chunks.extend(record_chunks)
+        except Exception as exc:
+            _logger.warning("Failed to serialize record in collection %r: %s", spec.name, exc)
+            continue
+
+    if not all_chunks:
+        return 0
+
+    source = f"mongo:{spec.name}"
+    try:
+        chroma_col.delete(where={"source": source})
+    except Exception:
+        pass
+
+    for i in range(0, len(all_chunks), batch_size):
+        batch = all_chunks[i : i + batch_size]
+        chroma_col.upsert(
+            documents=[c.text for c in batch],
+            ids=[c.chunk_id for c in batch],
+            metadatas=[c.metadata for c in batch],
+        )
+    return len(all_chunks)
+
+
+def sync_mongodb_to_rag(purge_legacy: bool = False, structured: bool = True) -> int:
+    """Reads approved collections from MongoDB Atlas, logs collection audit, and indexes into ChromaDB."""
     db = _connect_mongo()
     collection = _get_collection()
+
+    audit = audit_mongo_collections(db)
+    _logger.info(
+        "MongoDB Audit: %d approved, %d sensitive excluded, %d system excluded, %d unreviewed",
+        len(audit["approved"]),
+        len(audit["sensitive_excluded"]),
+        len(audit["system_excluded"]),
+        len(audit["unreviewed"]),
+    )
 
     if purge_legacy:
         print("\nPurging non-MongoDB legacy documents to enforce 100% MongoDB data...")
         purge_non_mongo_documents(collection)
 
     total_chunks = 0
-    categories = [
-        ("mongo:companies", "general", "all", _format_companies(db)),
-        ("mongo:milestones", "general", "all", _format_milestones(db)),
-        ("mongo:feta_academy", "operations", "all", _format_feta_academy(db)),
-        ("mongo:leave_policy", "hr", "employee", _format_leave_policy(db)),
-        ("mongo:catalogservices", "sales", "all", _format_catalog_services(db)),
-        ("mongo:pricingfeatures", "sales", "all", _format_pricing_features(db)),
-        ("mongo:teams", "operations", "employee", _format_teams(db)),
-        ("mongo:coupons", "sales", "employee", _format_coupons(db)),
-        ("mongo:faqs", "support", "all", _format_faqs(db)),
-        ("mongo:services", "operations", "all", _format_services(db)),
-        ("mongo:accounttypes", "operations", "all", _format_account_types(db)),
-        ("mongo:hsns", "finance", "all", _format_hsns(db)),
-        ("mongo:platformplans", "sales", "all", _format_platform_plans(db)),
-        ("mongo:platformserviceconfigs", "operations", "all", _format_platform_service_configs(db)),
-        ("mongo:settings", "operations", "all", _format_system_settings(db)),
-        ("mongo:permissions", "general", "all", _format_permissions(db)),
-        ("mongo:pricingplans", "sales", "all", _format_pricing_plans(db)),
-        ("mongo:jobs", "hr", "all", _format_jobs(db)),
-        ("mongo:announcements", "general", "all", _format_announcements(db)),
-        ("mongo:departments", "operations", "all", _format_departments(db)),
-        ("mongo:kpidefinitions", "operations", "all", _format_kpi_definitions(db)),
-        ("mongo:client_subscriptions", "operations", "all", _format_client_subscriptions(db)),
-        ("mongo:roles", "general", "employee", _format_roles(db)),
-        ("mongo:webpages", "legal", "all", _format_webpages(db)),
-        ("mongo:blogposts", "marketing", "all", _format_blogposts(db)),
-        ("mongo:testimonials", "sales", "all", _format_testimonials(db)),
-        ("mongo:teammembers", "hr", "all", _format_teammembers(db)),
-        ("mongo:users", "hr", "all", _format_users(db)),
-        ("mongo:invoices", "finance", "finance", _format_invoices(db)),
-        ("mongo:jobapplications", "hr", "hr", _format_jobapplications(db)),
-        ("mongo:kpi_targets", "operations", "operations", _format_kpi_targets(db)),
-        ("mongo:clientcompanies", "sales", "all", _format_client_companies(db)),
-        ("mongo:specialservicepages", "operations", "all", _format_feta_special_page(db)),
-        ("mongo:leavebalances", "hr", "employee", _format_leave_balances(db)),
-        ("mongo:platformroles", "operations", "all", _format_platform_roles(db)),
-        ("mongo:metriclibraries", "operations", "all", _format_metric_libraries(db)),
-        ("mongo:platformworkspaces", "general", "all", _format_platform_workspaces(db)),
-    ]
-
-    print("\nIndexing 100% exclusive MongoDB Atlas data into ChromaDB...")
-    for source, dept, access_level, docs in categories:
-        count = _upsert_category(collection, source, dept, access_level, docs)
-        total_chunks += count
+    if structured:
+        for spec in APPROVED_COLLECTIONS.values():
+            count = ingest_collection_structured(db, spec, collection)
+            total_chunks += count
+            _logger.info(
+                "  ✓ %s (dept: %s, access: %s): %d chunks",
+                spec.name,
+                spec.department,
+                spec.access_level,
+                count,
+            )
+    else:
+        categories = [
+            ("mongo:companies", "general", "all", _format_companies(db)),
+            ("mongo:milestones", "general", "all", _format_milestones(db)),
+            ("mongo:feta_academy", "operations", "all", _format_feta_academy(db)),
+            ("mongo:leave_policy", "hr", "employee", _format_leave_policy(db)),
+            ("mongo:catalogservices", "sales", "all", _format_catalog_services(db)),
+            ("mongo:pricingfeatures", "sales", "all", _format_pricing_features(db)),
+            ("mongo:teams", "operations", "employee", _format_teams(db)),
+            ("mongo:coupons", "sales", "employee", _format_coupons(db)),
+            ("mongo:faqs", "support", "all", _format_faqs(db)),
+            ("mongo:services", "operations", "all", _format_services(db)),
+            ("mongo:accounttypes", "operations", "all", _format_account_types(db)),
+            ("mongo:hsns", "finance", "all", _format_hsns(db)),
+            ("mongo:platformplans", "sales", "all", _format_platform_plans(db)),
+            ("mongo:platformserviceconfigs", "operations", "all", _format_platform_service_configs(db)),
+            ("mongo:settings", "operations", "all", _format_system_settings(db)),
+            ("mongo:permissions", "general", "all", _format_permissions(db)),
+            ("mongo:pricingplans", "sales", "all", _format_pricing_plans(db)),
+            ("mongo:jobs", "hr", "all", _format_jobs(db)),
+            ("mongo:announcements", "general", "all", _format_announcements(db)),
+            ("mongo:departments", "operations", "all", _format_departments(db)),
+            ("mongo:kpidefinitions", "operations", "all", _format_kpi_definitions(db)),
+            ("mongo:client_subscriptions", "operations", "all", _format_client_subscriptions(db)),
+            ("mongo:roles", "general", "employee", _format_roles(db)),
+            ("mongo:webpages", "legal", "all", _format_webpages(db)),
+            ("mongo:blogposts", "marketing", "all", _format_blogposts(db)),
+            ("mongo:testimonials", "sales", "all", _format_testimonials(db)),
+            ("mongo:teammembers", "hr", "all", _format_teammembers(db)),
+            ("mongo:users", "hr", "all", _format_users(db)),
+            ("mongo:invoices", "finance", "finance", _format_invoices(db)),
+            ("mongo:jobapplications", "hr", "hr", _format_jobapplications(db)),
+            ("mongo:kpi_targets", "operations", "operations", _format_kpi_targets(db)),
+            ("mongo:clientcompanies", "sales", "all", _format_client_companies(db)),
+            ("mongo:specialservicepages", "operations", "all", _format_feta_special_page(db)),
+            ("mongo:leavebalances", "hr", "employee", _format_leave_balances(db)),
+            ("mongo:platformroles", "operations", "all", _format_platform_roles(db)),
+            ("mongo:metriclibraries", "operations", "all", _format_metric_libraries(db)),
+            ("mongo:platformworkspaces", "general", "all", _format_platform_workspaces(db)),
+        ]
+        for source, dept, access_level, docs in categories:
+            count = _upsert_category(collection, source, dept, access_level, docs)
+            total_chunks += count
         print(f"  ✓ {source} (dept: {dept}, access: {access_level}): {len(docs)} docs -> {count} chunks")
 
     invalidate_collection_cache()

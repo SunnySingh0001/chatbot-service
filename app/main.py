@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
@@ -22,6 +22,47 @@ def _handle_rate_limit(request: Request, exc: RateLimitExceeded) -> Response:
     return JSONResponse(
         status_code=429,
         content={"detail": "Rate limit exceeded. Please try again later."},
+    )
+
+
+def _handle_unhandled_exception(request: Request, exc: Exception) -> Response:
+    """Handles uncaught server exceptions with safe generic JSON response and tracking ID."""
+    import uuid  # noqa: PLC0415
+    request_id = f"req-{uuid.uuid4().hex[:12]}"
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": "Something went wrong. Please try again.",
+            "request_id": request_id,
+            "detail": "Something went wrong. Please try again.",
+        },
+    )
+
+
+def _handle_http_exception(request: Request, exc: HTTPException) -> Response:
+    """Handles HTTPExceptions ensuring 5xx errors return safe structured JSON."""
+    if exc.status_code >= 500:
+        import uuid  # noqa: PLC0415
+        request_id = f"req-{uuid.uuid4().hex[:12]}"
+        msg = str(exc.detail) if exc.status_code == 503 else "Something went wrong. Please try again."
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": True,
+                "code": "SERVICE_UNAVAILABLE" if exc.status_code == 503 else "INTERNAL_ERROR",
+                "message": msg,
+                "request_id": request_id,
+                "detail": str(exc.detail),
+            },
+            headers=exc.headers,
+        )
+    content = exc.detail if isinstance(exc.detail, dict) else {"detail": exc.detail}
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=content,
+        headers=exc.headers,
     )
 
 
@@ -101,9 +142,11 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # State and handlers for rate limiting
+    # State and handlers for rate limiting and exceptions
     application.state.limiter = limiter
     application.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
+    application.add_exception_handler(HTTPException, _handle_http_exception)
+    application.add_exception_handler(Exception, _handle_unhandled_exception)
     application.add_middleware(SlowAPIMiddleware)
 
     # CORS configuration allowing only origins from settings

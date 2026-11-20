@@ -49,6 +49,19 @@ def _l2_normalize(vectors: np.ndarray) -> np.ndarray:
     return np.where(norm == 0, 1e-12, vectors / norm)
 
 
+def _strip_e5_prefix(text: str) -> str:
+    """Strips any leading passage: or query: prefix to prevent duplicate prefixing."""
+    stripped = text.strip()
+    while True:
+        if stripped.startswith("passage:"):
+            stripped = stripped[len("passage:"):].strip()
+        elif stripped.startswith("query:"):
+            stripped = stripped[len("query:"):].strip()
+        else:
+            break
+    return stripped
+
+
 class MultilingualE5EmbeddingFunction(EmbeddingFunction[Documents]):
     """Local ONNX-backed embedding function for intfloat/multilingual-e5-small."""
 
@@ -75,10 +88,7 @@ class MultilingualE5EmbeddingFunction(EmbeddingFunction[Documents]):
 
     def _embed(self, texts: list[str], prefix: str) -> Embeddings:
         """Encodes texts with the specified prefix, runs ONNX inference, and returns L2 vectors."""
-        processed = [
-            t if t.startswith("passage: ") or t.startswith("query: ") else f"{prefix}{t}"
-            for t in texts
-        ]
+        processed = [f"{prefix}{_strip_e5_prefix(t)}" for t in texts]
         encoded = self._tokenizer.encode_batch(processed)
         input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
         attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
@@ -92,13 +102,22 @@ class MultilingualE5EmbeddingFunction(EmbeddingFunction[Documents]):
         normalized = _l2_normalize(pooled)
         return [np.array(v, dtype=np.float32) for v in normalized]
 
-    def __call__(self, input: Documents) -> Embeddings:
+    def name(self) -> str:
+        """Returns the model identifier for ChromaDB metadata compatibility."""
+        return "multilingual-e5-small"
+
+    def embed_documents(self, input: Documents | list[str]) -> Embeddings:
         """Embeds document chunks for ingestion using 'passage: ' prefix."""
         return self._embed(list(input), prefix="passage: ")
 
-    def embed_query(self, input: Documents) -> Embeddings:
+    def embed_query(self, input: Documents | list[str] | str) -> Embeddings:
         """Embeds search query text using 'query: ' prefix."""
-        return self._embed(list(input), prefix="query: ")
+        texts = [input] if isinstance(input, str) else list(input)
+        return self._embed(texts, prefix="query: ")
+
+    def __call__(self, input: Documents) -> Embeddings:
+        """Embeds document chunks for ChromaDB ingestion using 'passage: ' prefix."""
+        return self.embed_documents(input)
 
 
 _EMBEDDING_FUNCTION_CACHE: dict[str, EmbeddingFunction[Documents]] = {}

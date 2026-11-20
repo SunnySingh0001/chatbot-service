@@ -25,7 +25,19 @@ class Settings(BaseSettings):
 
     # ── RAG / Vector store ────────────────────────────────────────────────────
     rag_score_threshold: float = Field(
-        default=0.30, validation_alias=AliasChoices("RAG_SCORE_THRESHOLD", "rag_score_threshold")
+        default=0.78, validation_alias=AliasChoices("RAG_SCORE_THRESHOLD", "rag_score_threshold")
+    )
+    rag_score_threshold_hinglish: float | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "RAG_SCORE_THRESHOLD_HINGLISH", "rag_score_threshold_hinglish"
+        ),
+    )
+    rag_score_threshold_hindi: float | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "RAG_SCORE_THRESHOLD_HINDI", "rag_score_threshold_hindi"
+        ),
     )
     rag_top_k: int = Field(default=4, validation_alias=AliasChoices("RAG_TOP_K", "rag_top_k"))
     chroma_persist_dir: str = Field(
@@ -70,6 +82,10 @@ class Settings(BaseSettings):
     max_message_length: int = 1000        # max characters per user question
     max_history_length: int = 10          # max conversation turns accepted
     max_output_tokens: int = 500          # max response tokens generated
+    session_ttl_hours: int = Field(
+        default=24,
+        validation_alias=AliasChoices("SESSION_TTL_HOURS", "session_ttl_hours"),
+    )
 
     # ── App ───────────────────────────────────────────────────────────────────
     app_env: str = "development"

@@ -50,6 +50,10 @@ class ChatRequest(BaseModel):
         max_length=MAX_USER_MESSAGE_CHARS,
         description="The question asked by the user",
     )
+    session_id: str | None = Field(
+        default=None,
+        description="Optional server session ID; new session created if omitted",
+    )
     history: list[ChatMessage] = Field(
         default_factory=list,
         max_length=MAX_HISTORY_TURNS,

@@ -11,11 +11,17 @@ class ChatState(TypedDict, total=False):
 
     user_id: str
     role: str
+    session_id: str
+    user_message_id: str
     question: str
     search_query: str
     history: list[dict[str, str]]
+    history_summary: str | None
     chunks: list[RetrievedChunk]
     sources: list[str]
     answer_text: str
     status: str
     start_time: float
+    validation_status: str
+    retry_count: int
+    validated_citations: list[str]

@@ -1,0 +1,290 @@
+{
+  "companies": {
+    "collection_name": "companies",
+    "last_sync_timestamp": "2026-11-20T11:21:44.659638+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "milestones": {
+    "collection_name": "milestones",
+    "last_sync_timestamp": "2026-11-20T11:21:44.671653+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "specialservicepages": {
+    "collection_name": "specialservicepages",
+    "last_sync_timestamp": "2026-11-20T11:21:44.683182+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "catalogservices": {
+    "collection_name": "catalogservices",
+    "last_sync_timestamp": "2026-11-20T11:21:44.694182+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "pricingfeatures": {
+    "collection_name": "pricingfeatures",
+    "last_sync_timestamp": "2026-11-20T11:21:44.708405+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "teams": {
+    "collection_name": "teams",
+    "last_sync_timestamp": "2026-11-20T11:21:44.718405+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "coupons": {
+    "collection_name": "coupons",
+    "last_sync_timestamp": "2026-11-20T11:21:44.730401+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "faqs": {
+    "collection_name": "faqs",
+    "last_sync_timestamp": "2026-11-20T11:21:44.740403+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "services": {
+    "collection_name": "services",
+    "last_sync_timestamp": "2026-11-20T11:21:44.752405+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "accounttypes": {
+    "collection_name": "accounttypes",
+    "last_sync_timestamp": "2026-11-20T11:21:44.763403+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "hsns": {
+    "collection_name": "hsns",
+    "last_sync_timestamp": "2026-11-20T11:21:44.773395+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "platformplans": {
+    "collection_name": "platformplans",
+    "last_sync_timestamp": "2026-11-20T11:21:44.785920+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "platformserviceconfigs": {
+    "collection_name": "platformserviceconfigs",
+    "last_sync_timestamp": "2026-11-20T11:21:44.796429+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "settings": {
+    "collection_name": "settings",
+    "last_sync_timestamp": "2026-11-20T11:21:44.807452+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "permissions": {
+    "collection_name": "permissions",
+    "last_sync_timestamp": "2026-11-20T11:21:44.818806+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "pricingplans": {
+    "collection_name": "pricingplans",
+    "last_sync_timestamp": "2026-11-20T11:21:44.830802+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "jobs": {
+    "collection_name": "jobs",
+    "last_sync_timestamp": "2026-11-20T11:21:44.841850+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "announcements": {
+    "collection_name": "announcements",
+    "last_sync_timestamp": "2026-11-20T11:21:44.852912+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "departments": {
+    "collection_name": "departments",
+    "last_sync_timestamp": "2026-11-20T11:21:44.863671+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "kpidefinitions": {
+    "collection_name": "kpidefinitions",
+    "last_sync_timestamp": "2026-11-20T11:21:44.873682+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "clientcompanies": {
+    "collection_name": "clientcompanies",
+    "last_sync_timestamp": "2026-11-20T11:21:44.883199+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "roles": {
+    "collection_name": "roles",
+    "last_sync_timestamp": "2026-11-20T11:21:44.894201+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "webpages": {
+    "collection_name": "webpages",
+    "last_sync_timestamp": "2026-11-20T11:21:44.906201+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "blogposts": {
+    "collection_name": "blogposts",
+    "last_sync_timestamp": "2026-11-20T11:21:44.917199+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "testimonials": {
+    "collection_name": "testimonials",
+    "last_sync_timestamp": "2026-11-20T11:21:44.927212+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "teammembers": {
+    "collection_name": "teammembers",
+    "last_sync_timestamp": "2026-11-20T11:21:44.938729+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "users": {
+    "collection_name": "users",
+    "last_sync_timestamp": "2026-11-20T11:21:44.955953+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "invoices": {
+    "collection_name": "invoices",
+    "last_sync_timestamp": "2026-11-20T11:21:44.967961+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "jobapplications": {
+    "collection_name": "jobapplications",
+    "last_sync_timestamp": "2026-11-20T11:21:44.977963+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "kpitargets": {
+    "collection_name": "kpitargets",
+    "last_sync_timestamp": "2026-11-20T11:21:44.987012+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "leavebalances": {
+    "collection_name": "leavebalances",
+    "last_sync_timestamp": "2026-11-20T11:21:44.998008+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "platformroles": {
+    "collection_name": "platformroles",
+    "last_sync_timestamp": "2026-11-20T11:21:45.008011+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "metriclibraries": {
+    "collection_name": "metriclibraries",
+    "last_sync_timestamp": "2026-11-20T11:21:45.018022+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "platformworkspaces": {
+    "collection_name": "platformworkspaces",
+    "last_sync_timestamp": "2026-11-20T11:21:45.030191+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "contracts": {
+    "collection_name": "contracts",
+    "last_sync_timestamp": "2026-11-20T11:21:45.043191+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  },
+  "soptemplates": {
+    "collection_name": "soptemplates",
+    "last_sync_timestamp": "2026-11-20T11:21:45.057195+00:00",
+    "last_sync_status": "success",
+    "total_records": 0,
+    "total_chunks": 0,
+    "record_hashes": {}
+  }
+}

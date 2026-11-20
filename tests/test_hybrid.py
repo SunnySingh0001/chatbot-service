@@ -113,3 +113,111 @@ def test_bm25_chunk_score_provenance_never_inherits() -> None:
     fused_no_emb = _fuse_reciprocal_rank([c1], [c2], query_embedding=q_emb, chunk_embeddings={})
     c2_no_emb = next(c for c in fused_no_emb if c.source == "doc2.md")
     assert c2_no_emb.score is None
+
+
+def test_hybrid_search_bypasses_low_vector_similarity_when_bm25_matches(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies that low vector similarity score (< threshold) does not gate out BM25 exact matches."""
+    import app.rag.retriever as ret_mod
+
+    low_score_vector_chunk = ret_mod.RetrievedChunk(
+        text="Generic IT support instructions.",
+        source="general_faq.md",
+        department="it",
+        access_level="all",
+        score=0.42,
+        chunk_index=0,
+    )
+    monkeypatch.setattr(
+        ret_mod,
+        "_query_vector_store",
+        lambda *args, **kwargs: [low_score_vector_chunk],
+    )
+
+    chunks = ret_mod.retrieve("VPN", role="employee", score_threshold=0.80, hybrid_search=True)
+    assert len(chunks) > 0
+    assert any("VPN" in c.text or c.source == "it_policies.md" for c in chunks)
+
+    pure_vec_chunks = ret_mod.retrieve("VPN", role="employee", score_threshold=0.80, hybrid_search=False)
+    assert pure_vec_chunks == []
+
+
+def test_hybrid_search_fuses_both_vector_and_bm25_candidates(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies that RRF fuses both vector candidates and BM25 candidates into the result pool."""
+    import app.rag.retriever as ret_mod
+
+    high_score_vector_chunk = ret_mod.RetrievedChunk(
+        text="Standard laptop request process.",
+        source="laptop_policy.md",
+        department="it",
+        access_level="all",
+        score=0.89,
+        chunk_index=0,
+    )
+    monkeypatch.setattr(
+        ret_mod,
+        "_query_vector_store",
+        lambda *args, **kwargs: [high_score_vector_chunk],
+    )
+
+    chunks = ret_mod.retrieve("Section 2.3", role="employee", score_threshold=0.80, hybrid_search=True)
+    sources = [c.source for c in chunks]
+    assert "laptop_policy.md" in sources
+    assert any("employee_handbook.md" in s or "it_policies.md" in s for s in sources)
+
+
+def test_hybrid_search_gates_when_both_vector_low_and_bm25_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies that retrieval returns empty when vector score < threshold and BM25 finds 0 matches."""
+    import app.rag.retriever as ret_mod
+
+    low_score_chunk = ret_mod.RetrievedChunk(
+        text="Unrelated company overview.",
+        source="overview.md",
+        department="all",
+        access_level="all",
+        score=0.35,
+        chunk_index=0,
+    )
+    monkeypatch.setattr(
+        ret_mod,
+        "_query_vector_store",
+        lambda *args, **kwargs: [low_score_chunk],
+    )
+
+    chunks = ret_mod.retrieve(
+        "xyznonexistenttoken999qqq",
+        role="employee",
+        score_threshold=0.80,
+        hybrid_search=True,
+    )
+    assert chunks == []
+
+
+def test_fetch_candidate_pool_does_not_gate_bm25_when_vector_below_thresh(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies _fetch_candidate_pool delegates to hybrid fusion even when vector score < threshold."""
+    from unittest.mock import MagicMock
+    import app.rag.retriever as ret_mod
+
+    mock_col = MagicMock()
+    mock_col.count.return_value = 10
+    low_chunk = ret_mod.RetrievedChunk("txt", "src.md", "dep", "all", score=0.40, chunk_index=0)
+    mock_bm25_chunk = ret_mod.RetrievedChunk("bm25 txt", "bm25.md", "dep", "all", score=None, chunk_index=0)
+
+    monkeypatch.setattr(ret_mod, "_query_vector_store", lambda *a, **k: [low_chunk])
+    res_pure = ret_mod._fetch_candidate_pool(
+        mock_col, "test", {}, "employee", None, None, False, 5, 10, thresh=0.80
+    )
+    assert res_pure == []
+
+    monkeypatch.setattr(ret_mod, "_execute_hybrid_fusion", lambda *a, **k: [mock_bm25_chunk])
+    res_hyb = ret_mod._fetch_candidate_pool(
+        mock_col, "test", {}, "employee", None, None, True, 5, 10, thresh=0.80
+    )
+    assert res_hyb == [mock_bm25_chunk]
