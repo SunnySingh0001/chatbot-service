@@ -190,10 +190,12 @@ def test_multiple_retrieved_documents_with_separate_citations(sample_chunks: lis
 
 def test_invalid_source_metadata(sample_chunks: list[RetrievedChunk]) -> None:
     """14. Verifies that sanitize_answer_citations removes bad sources without mangling answer body."""
-    raw = "Policy details are confirmed.\n\nSources: fake_source_a, fake_source_b"
+    raw = "Policy details are confirmed.\n\n**Sources:** `fake_source_a`, `fake_source_b`"
     sanitized = sanitize_answer_citations(raw, ["fake_source_a", "fake_source_b"], sample_chunks)
     assert "fake_source_a" not in sanitized
     assert "mongo:leave_policy" in sanitized
+    assert not sanitized.endswith("**")
+    assert "**Sources:" not in sanitized
 
 
 def test_retry_limit_and_failure_behavior(monkeypatch: pytest.MonkeyPatch, sample_chunks: list[RetrievedChunk]) -> None:

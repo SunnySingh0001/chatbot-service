@@ -167,3 +167,58 @@ def test_rate_limiter(orchestrator_mode: str, monkeypatch: pytest.MonkeyPatch) -
             break
     limiter.reset()
     assert hit_429 is True
+
+
+def test_chat_temporary_mode_does_not_persist_session(
+    orchestrator_mode: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verifies temporary chat streams answers without creating or storing server sessions while keeping RBAC."""
+    from app.rag.session_manager import _MEMORY_SESSIONS, reset_memory_store, session_manager
+
+    reset_memory_store()
+    called = False
+
+    def fail_if_called(*args: object, **kwargs: object) -> object:
+        nonlocal called
+        called = True
+        raise AssertionError("Session persistence must not run in temporary mode")
+
+    monkeypatch.setattr(session_manager, "get_or_create_session", fail_if_called)
+    monkeypatch.setattr(session_manager, "save_user_message", fail_if_called)
+    monkeypatch.setattr(session_manager, "save_assistant_message", fail_if_called)
+
+    token = create_access_token(user_id="temp_emp", role="employee")
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {
+        "message": "What is the leave policy?",
+        "history": [{"role": "user", "content": "Hello"}],
+        "temporary": True,
+    }
+    resp = client.post("/chat", json=payload, headers=headers)
+    assert resp.status_code == 200
+    assert called is False
+    assert "x-session-id" not in resp.headers
+    assert resp.headers.get("x-temporary-chat") == "true"
+    assert len(_MEMORY_SESSIONS) == 0
+
+    events = [
+        json.loads(line[6:])
+        for line in resp.text.splitlines()
+        if line.startswith("data: ")
+    ]
+    done_ev = next(ev for ev in events if ev.get("done") is True)
+    assert done_ev.get("temporary") is True
+    assert "session_id" not in done_ev
+    assert "employee_handbook.md" in done_ev["sources"]
+
+    # RBAC remains enforced in temporary mode
+    hr_resp = client.post(
+        "/chat",
+        json={"message": "What are the salary bands for L1 and L2?", "temporary": True},
+        headers=headers,
+    )
+    assert hr_resp.status_code == 200
+    _, hr_sources = _parse_sse(hr_resp.text)
+    assert "hr_benefits.md" not in hr_sources
+

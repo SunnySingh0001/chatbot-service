@@ -51,15 +51,47 @@ class RetrievedChunk:
     rerank_score: float | None = None  # cross-encoder score ∈ [0, 1], or None
 
 
-def _build_where_clause(role: str) -> dict[str, object]:
-    """Builds the ChromaDB metadata filter; raises PermissionError on unknown roles."""
+def _build_where_clause(
+    role: str,
+    client_id: str | None = None,
+    company_id: str | None = None,
+) -> dict[str, object]:
+    """Builds ChromaDB metadata filter with role, client, and company isolation."""
     if role not in ROLE_ACCESS:
         _logger.warning("Unrecognized role %r provided to retriever; denying access", role)
         raise PermissionError(f"Access denied: role {role!r} is not recognized")
-    allowed = ROLE_ACCESS[role]
-    if len(allowed) == 1:
-        return {"access_level": allowed[0]}
-    return {"access_level": {"$in": allowed}}
+    if getattr(settings, "require_tenant_isolation", False) and not company_id:
+        _logger.warning("Tenant isolation required but company_id missing for role %r", role)
+        raise PermissionError("Access denied: tenant identity (company_id) is required")
+
+    if role == "client":
+        if client_id:
+            self_sources = [
+                "mongo:clientcompanies",
+                "mongo:clientaccounts",
+                "mongo:subscriptionevents",
+                "mongo:supporttickets",
+            ]
+            base_where: dict[str, object] = {
+                "$or": [
+                    {"access_level": "all"},
+                    {"$and": [{"client_id": client_id}, {"access_level": "client"}]},
+                    {"$and": [{"client_id": client_id}, {"source": {"$in": self_sources}}]},
+                ]
+            }
+        else:
+            base_where = {"access_level": "all"}
+    else:
+        allowed = ROLE_ACCESS[role]
+        base_where = (
+            {"access_level": allowed[0]}
+            if len(allowed) == 1
+            else {"access_level": {"$in": allowed}}
+        )
+
+    if company_id:
+        return {"$and": [base_where, {"company_id": company_id}]}
+    return base_where
 
 
 def get_collection_name(
@@ -151,11 +183,15 @@ def _parse_results(
 
 
 def invalidate_collection_cache() -> None:
-    """Clears in-memory ChromaDB collection handles and BM25 index cache."""
+    """Clears in-memory ChromaDB collection handles, BM25 index cache, entity, and schema caches."""
     _COLLECTION_CACHE.clear()
     from app.rag.bm25 import invalidate_bm25_cache  # noqa: PLC0415
+    from app.rag.entity_lookup import invalidate_entity_cache  # noqa: PLC0415
+    from app.rag.schema_discovery import invalidate_schema_cache  # noqa: PLC0415
 
     invalidate_bm25_cache()
+    invalidate_entity_cache()
+    invalidate_schema_cache()
 
 
 def _build_bm25_chunk(
@@ -323,12 +359,14 @@ def _execute_hybrid_fusion(
     cand_limit: int,
     req_k: int,
     thresh: float = 0.0,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Retrieves BM25 candidates and fuses with vector candidates using RRF."""
     from app.rag.bm25 import get_bm25_index  # noqa: PLC0415
 
     col_name = get_collection_name(mode, table_max_rows=table_max_rows)
-    bm25_index = get_bm25_index(col_name, role)
+    bm25_index = get_bm25_index(col_name, role, client_id=client_id, company_id=company_id)
     bm25_chunks = _collect_bm25_candidates(bm25_index, query)
 
     if _is_hybrid_pool_empty(bm25_chunks, vector_chunks, thresh):
@@ -409,6 +447,8 @@ def _fetch_candidate_pool(
     cand_count: int,
     cand_limit: int,
     thresh: float,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Retrieves and gates initial vector/hybrid candidate chunks."""
     vector_chunks = _query_vector_store(
@@ -424,6 +464,8 @@ def _fetch_candidate_pool(
             cand_limit,
             cand_count,
             thresh=thresh,
+            client_id=client_id,
+            company_id=company_id,
         )
     if thresh > 0.0 and (not vector_chunks or vector_chunks[0].score is None or vector_chunks[0].score < thresh):
         return []
@@ -431,11 +473,15 @@ def _fetch_candidate_pool(
 
 
 def _open_accessible_collection(
-    role: str, mode: str | None, table_max_rows: int | None
+    role: str,
+    mode: str | None,
+    table_max_rows: int | None,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> tuple[chromadb.Collection, dict[str, object]] | None:
-    """Opens ChromaDB collection and builds role permission filter, returning None on access failure."""
+    """Opens ChromaDB collection and builds role/tenant permission filter, returning None on denial."""
     try:
-        where = _build_where_clause(role)
+        where = _build_where_clause(role, client_id=client_id, company_id=company_id)
         collection = _open_collection(mode=mode, table_max_rows=table_max_rows)
     except (PermissionError, Exception):
         return None
@@ -455,6 +501,8 @@ def _fuse_secondary_query(
     cand_count: int,
     cand_limit: int,
     thresh: float,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Retrieves candidates for secondary original query and fuses via RRF in both mode."""
     from app.rag.prompt import is_greeting  # noqa: PLC0415
@@ -466,7 +514,18 @@ def _fuse_secondary_query(
         and not is_greeting(original_query)
     ):
         orig_cands = _fetch_candidate_pool(
-            collection, original_query, where, role, mode, table_max_rows, is_hybrid, cand_count, cand_limit, thresh
+            collection,
+            original_query,
+            where,
+            role,
+            mode,
+            table_max_rows,
+            is_hybrid,
+            cand_count,
+            cand_limit,
+            thresh,
+            client_id=client_id,
+            company_id=company_id,
         )
         return _fuse_query_lists(candidates, orig_cands, candidate_limit=cand_count)
     return candidates
@@ -483,17 +542,103 @@ def _run_deep_check(
     cand_cnt: int,
     cand_lim: int,
     thresh: float,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> list[RetrievedChunk]:
     """Executes Tier-2 fallback deep keyword search when primary retrieval yields no chunks."""
     cleaned = _clean_for_deep_check(query)
     if not cleaned or cleaned == query.strip().lower():
         return []
     rescued = _fetch_candidate_pool(
-        collection, cleaned, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh * 0.90
+        collection,
+        cleaned,
+        where,
+        role,
+        mode,
+        table_max_rows,
+        is_hyb,
+        cand_cnt,
+        cand_lim,
+        thresh * 0.90,
+        client_id=client_id,
+        company_id=company_id,
     )
     if rescued:
         _logger.info("Tier-2 Deep Check rescued query %r using cleaned keywords %r", query, cleaned)
     return rescued
+
+
+_CLIENT_PART_RE: re.Pattern[str] = re.compile(r"Part\s+(\d+)\s*/\s*Page\s+\d+", re.IGNORECASE)
+
+
+def _build_client_chunk(text: str, meta: dict[str, object]) -> RetrievedChunk:
+    """Builds a RetrievedChunk from a ChromaDB client subscription document."""
+    return RetrievedChunk(
+        text=text,
+        source=str(meta.get("source", "mongo:client_subscriptions")),
+        department=str(meta.get("department", "operations")),
+        access_level=str(meta.get("access_level", "employee")),
+        score=1.0,
+        chunk_index=int(meta.get("chunk_index", 0)),  # type: ignore[arg-type]
+    )
+
+
+def _retrieve_client_page(
+    collection: chromadb.Collection,
+    where: dict[str, object],
+    page_num: int,
+) -> list[RetrievedChunk]:
+    """Retrieves ordered client directory chunks using ChromaDB where-clause RBAC filtering."""
+    client_where: dict[str, object] = {"$and": [where, {"source": "mongo:client_subscriptions"}]}
+    res = collection.get(where=client_where, include=["documents", "metadatas"])
+    docs = res.get("documents") or []
+    metas = res.get("metadatas") or []
+    if not docs:
+        return []
+    overview: RetrievedChunk | None = None
+    pages: dict[int, RetrievedChunk] = {}
+    for doc, meta in sorted(zip(docs, metas), key=lambda x: int(x[1].get("chunk_index", 0))):
+        match = _CLIENT_PART_RE.search(doc)
+        if match is None:
+            if int(meta.get("chunk_index", 0)) == 0 or "Overview]" in doc:
+                overview = _build_client_chunk(doc, meta)
+            continue
+        if "\n- **" not in doc:
+            continue
+        pages[int(match.group(1))] = _build_client_chunk(doc, meta)
+    if not pages:
+        return [overview] if overview is not None else []
+    target = min(max(page_num, 1), max(pages.keys()))
+    selected = pages[target]
+    if target == 1 and overview is not None:
+        return [overview, selected]
+    return [selected]
+
+
+def _try_retrieve_client_page(
+    collection: chromadb.Collection,
+    where: dict[str, object],
+    role: str,
+    query: str,
+    original_query: str | None,
+    history: list[dict[str, str]] | None,
+    client_page: int | None,
+) -> list[RetrievedChunk] | None:
+    """Returns ordered client page chunks for unfiltered list/pagination queries, else None."""
+    from app.rag.condense import resolve_client_list_page  # noqa: PLC0415
+
+    target_page = (
+        client_page
+        if client_page is not None
+        else resolve_client_list_page(query, history=history, original_query=original_query)
+    )
+    if target_page is None:
+        return None
+    ordered_clients = _retrieve_client_page(collection, where, target_page)
+    allowed_levels = ROLE_ACCESS.get(role.lower(), [])
+    if ordered_clients or "employee" not in allowed_levels:
+        return ordered_clients
+    return None
 
 
 def retrieve(
@@ -509,14 +654,72 @@ def retrieve(
     grader: bool | None = None,
     rerank_min_score: float | None = None,
     original_query: str | None = None,
+    client_id: str | None = None,
+    history: list[dict[str, str]] | None = None,
+    client_page: int | None = None,
+    company_id: str | None = None,
 ) -> list[RetrievedChunk]:
-    """Queries ChromaDB with role permissions, fusing BM25, reranking, and grading."""
+    """Queries ChromaDB and entity layers with role, client, and company isolation."""
     from app.rag.prompt import is_greeting  # noqa: PLC0415
 
-    col_info = _open_accessible_collection(role, mode, table_max_rows)
+    col_info = _open_accessible_collection(
+        role, mode, table_max_rows, client_id=client_id, company_id=company_id
+    )
     if is_greeting(query) or col_info is None:
         return []
     collection, where = col_info
+
+    ordered_clients = _try_retrieve_client_page(
+        collection,
+        where,
+        role,
+        query,
+        original_query,
+        history,
+        client_page,
+    )
+    if ordered_clients is not None:
+        return ordered_clients
+
+    from app.rag.cross_module_analytics import run_planned_query_for_chat  # noqa: PLC0415
+    from app.rag.query_planner import plan_natural_language_query  # noqa: PLC0415
+
+    plan = plan_natural_language_query(original_query or query)
+    if plan.intent in ("FILTERED_LIST", "FINANCIAL_ANALYTICS", "KPI_ANALYTICS", "CROSS_MODULE_ANALYTICS", "CLARIFICATION_REQUIRED"):
+        planned_chunks = run_planned_query_for_chat(
+            original_query or query,
+            role=role,
+            client_id=client_id,
+            company_id=company_id,
+        )
+        if planned_chunks:
+            return planned_chunks
+
+    from app.rag.entity_tools import run_entity_discovery_for_chat  # noqa: PLC0415
+
+    discovery_chunks = run_entity_discovery_for_chat(
+        query,
+        role=role,
+        original_query=original_query,
+        history=history,
+        client_id=client_id,
+        company_id=company_id,
+    )
+    if discovery_chunks:
+        return discovery_chunks
+
+    from app.rag.entity_lookup import lookup_entity_360  # noqa: PLC0415
+
+    entity_chunks = lookup_entity_360(
+        query,
+        role=role,
+        original_query=original_query,
+        history=history,
+        client_id=client_id,
+        company_id=company_id,
+    )
+    if entity_chunks:
+        return entity_chunks
 
     is_hyb = settings.hybrid_search if hybrid_search is None else hybrid_search
     is_rr = settings.reranker if reranker is None else reranker
@@ -528,17 +731,52 @@ def retrieve(
     thresh = _resolve_score_threshold(query, score_threshold)
 
     candidates = _fetch_candidate_pool(
-        collection, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
+        collection,
+        query,
+        where,
+        role,
+        mode,
+        table_max_rows,
+        is_hyb,
+        cand_cnt,
+        cand_lim,
+        thresh,
+        client_id=client_id,
+        company_id=company_id,
     )
     candidates = _fuse_secondary_query(
-        candidates, collection, original_query, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
+        candidates,
+        collection,
+        original_query,
+        query,
+        where,
+        role,
+        mode,
+        table_max_rows,
+        is_hyb,
+        cand_cnt,
+        cand_lim,
+        thresh,
+        client_id=client_id,
+        company_id=company_id,
     )
     if not candidates and score_threshold is None:
         from app.rag.prompt import detect_language  # noqa: PLC0415
 
         if detect_language(query) in ("hinglish", "hindi"):
             candidates = _run_deep_check(
-                collection, query, where, role, mode, table_max_rows, is_hyb, cand_cnt, cand_lim, thresh
+                collection,
+                query,
+                where,
+                role,
+                mode,
+                table_max_rows,
+                is_hyb,
+                cand_cnt,
+                cand_lim,
+                thresh,
+                client_id=client_id,
+                company_id=company_id,
             )
     if not candidates or not is_rr:
         return candidates[:req_k]

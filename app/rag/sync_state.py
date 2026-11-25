@@ -18,6 +18,22 @@ _DEFAULT_CHECKPOINT_PATH = Path("data/sync_checkpoints.json")
 _DEFAULT_LOCK_TTL_SECONDS = 600
 
 
+def _resolve_checkpoint_path(explicit: Path | None) -> Path:
+    """Resolves checkpoint file path from explicit arg or SYNC_CHECKPOINT_PATH env var."""
+    if explicit is not None:
+        return explicit
+    env_val = os.environ.get("SYNC_CHECKPOINT_PATH", "").strip()
+    return Path(env_val) if env_val else _DEFAULT_CHECKPOINT_PATH
+
+
+def _resolve_lock_path(explicit: Path | None) -> Path:
+    """Resolves sync lock file path from explicit arg or SYNC_LOCK_PATH env var."""
+    if explicit is not None:
+        return explicit
+    env_val = os.environ.get("SYNC_LOCK_PATH", "").strip()
+    return Path(env_val) if env_val else _DEFAULT_LOCK_PATH
+
+
 class SyncLockError(Exception):
     """Raised when an operation cannot acquire the sync lock due to an ongoing sync."""
 
@@ -26,10 +42,14 @@ class SyncLockError(Exception):
 class SyncLockManager:
     """Manages file-based mutual exclusion lock with TTL to prevent concurrent sync operations."""
 
-    lock_file: Path = _DEFAULT_LOCK_PATH
+    lock_file: Path | None = None
     ttl_seconds: int = _DEFAULT_LOCK_TTL_SECONDS
     owner_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     _is_acquired: bool = False
+
+    def __post_init__(self) -> None:
+        """Resolves lock file path lazily to respect SYNC_LOCK_PATH test isolation."""
+        self.lock_file = _resolve_lock_path(self.lock_file)
 
     def is_locked(self) -> bool:
         """Returns True if the lock file exists and is currently valid and unexpired."""
@@ -131,9 +151,9 @@ class CollectionCheckpoint:
 class CheckpointManager:
     """Persists and manages high-watermark timestamps and content hashes across sync runs."""
 
-    def __init__(self, checkpoint_path: Path = _DEFAULT_CHECKPOINT_PATH) -> None:
-        """Initializes checkpoint manager with the specified persistence file path."""
-        self.checkpoint_path = checkpoint_path
+    def __init__(self, checkpoint_path: Path | None = None) -> None:
+        """Initializes checkpoint manager with explicit or env-isolated persistence file path."""
+        self.checkpoint_path = _resolve_checkpoint_path(checkpoint_path)
         self._checkpoints: dict[str, CollectionCheckpoint] = {}
         self.load()
 

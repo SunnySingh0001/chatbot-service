@@ -76,6 +76,8 @@ async def _stream_langgraph_sse(
     session_id = initial_state.get("session_id", "")
     req_id = request_id or f"req-{uuid.uuid4().hex[:12]}"
     done_emitted = False
+    continuation_available = False
+    truncated = False
 
     try:
         async for mode, payload in chat_graph.astream(
@@ -90,14 +92,24 @@ async def _stream_langgraph_sse(
             if mode == "custom" and isinstance(payload, dict) and "token" in payload:
                 yield f"data: {json.dumps({'token': payload['token']})}\n\n"
             elif mode == "updates" and isinstance(payload, dict):
+                if "generate" in payload and isinstance(payload["generate"], dict):
+                    continuation_available = bool(payload["generate"].get("continuation_available", continuation_available))
+                    truncated = bool(payload["generate"].get("truncated", truncated))
                 if "finalize" in payload and "sources" in payload["finalize"]:
                     sources = payload["finalize"]["sources"]
                 elif "retrieve" in payload and "sources" in payload["retrieve"]:
                     sources = payload["retrieve"]["sources"]
 
         if not await request.is_disconnected():
-            done_payload: dict[str, Any] = {"done": True, "sources": sources}
-            if session_id:
+            done_payload: dict[str, Any] = {
+                "done": True,
+                "sources": sources,
+                "truncated": truncated,
+                "continuation_available": continuation_available,
+            }
+            if initial_state.get("temporary"):
+                done_payload["temporary"] = True
+            elif session_id:
                 done_payload["session_id"] = session_id
             done_emitted = True
             yield f"data: {json.dumps(done_payload)}\n\n"
@@ -131,41 +143,57 @@ def _run_langgraph_chat(
     start_time: float,
     request_id: str,
 ) -> StreamingResponse:
-    """Resolves session, loads budgeted history, and returns LangGraph streaming response."""
+    """Resolves session or stateless temporary mode, budgets history, and streams response."""
     from app.rag.history_budget import budget_conversation_history  # noqa: PLC0415
     from app.rag.session_manager import session_manager  # noqa: PLC0415
 
-    sid, server_msgs, summary = session_manager.get_or_create_session(
-        chat_req.session_id, current_user.user_id, current_user.role
-    )
-
-    if chat_req.session_id:
-        raw_history = [{"role": m["role"], "content": m["content"]} for m in server_msgs]
-    elif server_msgs:
-        raw_history = [{"role": m["role"], "content": m["content"]} for m in server_msgs]
-    else:
+    if chat_req.temporary:
+        sid = ""
+        summary = None
+        user_msg_id = ""
         raw_history = [m.model_dump() for m in chat_req.history]
+    else:
+        sid, server_msgs, summary = session_manager.get_or_create_session(
+            chat_req.session_id, current_user.user_id, current_user.role
+        )
+        if chat_req.session_id:
+            raw_history = [{"role": m["role"], "content": m["content"]} for m in server_msgs]
+        elif server_msgs:
+            raw_history = [{"role": m["role"], "content": m["content"]} for m in server_msgs]
+        else:
+            raw_history = [m.model_dump() for m in chat_req.history]
 
     budgeted_history, calc_summary = budget_conversation_history(raw_history)
-    user_msg_id = session_manager.save_user_message(sid, current_user.user_id, chat_req.message)
+    if not chat_req.temporary:
+        user_msg_id = session_manager.save_user_message(sid, current_user.user_id, chat_req.message)
+        entity_ctx = session_manager.get_entity_context(sid, current_user.user_id)
+    else:
+        entity_ctx = {}
 
     initial_state: ChatState = {
         "user_id": current_user.user_id,
         "role": current_user.role,
+        "client_id": current_user.client_id,
+        "company_id": current_user.company_id,
         "session_id": sid,
         "user_message_id": user_msg_id,
         "question": chat_req.message,
         "history": budgeted_history,
         "history_summary": summary or calc_summary,
+        "entity_context": entity_ctx,
         "chunks": [],
         "sources": [],
         "answer_text": "",
         "status": "initialized",
         "start_time": start_time,
+        "temporary": chat_req.temporary,
     }
 
     headers = dict(_SSE_HEADERS)
-    headers["X-Session-ID"] = sid
+    if chat_req.temporary:
+        headers["X-Temporary-Chat"] = "true"
+    else:
+        headers["X-Session-ID"] = sid
     headers["X-Request-ID"] = request_id
     return StreamingResponse(
         _stream_langgraph_sse(request, initial_state, request_id=request_id),

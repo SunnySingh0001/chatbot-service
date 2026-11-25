@@ -9,11 +9,21 @@ export const MAX_HISTORY_TURNS = 10;
 export const MAX_TOTAL_HISTORY_CHARS = 12000;
 
 /**
- * Truncates message content strictly to the allowed ceiling per role.
+ * Truncates message content strictly to the allowed ceiling per role,
+ * preserving trailing pagination footers on long assistant replies.
  */
 export function clampContentByRole(role: "user" | "assistant", content: string): string {
   const limit = role === "user" ? MAX_USER_CHARS : MAX_ASSISTANT_CHARS;
-  return content.length > limit ? content.slice(0, limit) : content;
+  if (content.length <= limit) {
+    return content;
+  }
+  if (role === "assistant" && limit > 700) {
+    const marker = "\n...\n";
+    const tailLen = 595;
+    const headLen = limit - marker.length - tailLen;
+    return `${content.slice(0, headLen)}${marker}${content.slice(-tailLen)}`;
+  }
+  return content.slice(0, limit);
 }
 
 /**

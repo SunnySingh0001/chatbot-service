@@ -78,13 +78,19 @@ def run_checks() -> bool:
             "expected": ["Ali", "Asgar", "Account Manager"],
         },
         {
-            "id": "7. Salary Confidentiality / Non-Disclosure",
+            "id": "7. Ambiguous Salary Pronoun Clarification",
             "query": "how much its salary",
+            "history": [],
+            "expected": ["clarify", "referring"],
+        },
+        {
+            "id": "8. Salary Confidentiality / Non-Disclosure",
+            "query": "what is employee salary structure",
             "history": [],
             "expected": ["salary"],
         },
         {
-            "id": "8. KPI Definitions",
+            "id": "9. KPI Definitions",
             "query": "what is kpi as per this application",
             "history": [],
             "expected": ["KPI", "performance"],
@@ -101,8 +107,14 @@ def run_checks() -> bool:
             continue
 
         ans, sources = parse_sse(resp.text)
-        norm_ans = ans.lower().replace(",", "")
-        missing = [exp for exp in c["expected"] if exp.lower().replace(",", "") not in norm_ans]
+        # Normalize separators so humanized display forms ("ATUL BANGRE", "Super Admin")
+        # satisfy JWT claim identifier checks ("atul_bangre", "super-admin").
+        norm_ans = ans.lower().replace(",", "").replace("-", " ").replace("_", " ")
+        missing = [
+            exp
+            for exp in c["expected"]
+            if exp.lower().replace(",", "").replace("-", " ").replace("_", " ") not in norm_ans
+        ]
         if missing:
             print(f"  [FAIL] {c['id']}: Missing keywords {missing}")
             print(f"         Answer: {ans[:120]}...")
@@ -112,7 +124,7 @@ def run_checks() -> bool:
 
     print("=" * 65)
     if all_passed:
-        print("  ✓ ALL 8 PRODUCTION DATA CHECKS PASSED — 100% READY FOR DEMO")
+        print(f"  ✓ ALL {len(checks)} PRODUCTION DATA CHECKS PASSED — 100% READY FOR DEMO")
     else:
         print("  ✗ SOME CHECKS FAILED — REVIEW DATABASE INGESTION")
     print("=" * 65)

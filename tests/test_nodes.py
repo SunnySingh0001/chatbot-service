@@ -216,3 +216,185 @@ def test_full_graph_execution_valid_employee_path() -> None:
     assert len(result["sources"]) > 0
     assert "employee_handbook.md" in result["sources"]
     assert len(result["answer_text"]) > 0
+
+
+def test_stream_gemini_does_not_concatenate_after_mid_stream_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies mid-stream Gemini failure aborts instead of concatenating a fallback model response."""
+    import sys
+    import types
+    from app.rag import llm  # noqa: PLC0415
+
+    class _Chunk:
+        def __init__(self, text: str | None = None, raise_val_err: bool = False) -> None:
+            self._text = text
+            self._raise = raise_val_err
+
+        @property
+        def text(self) -> str:
+            if self._raise:
+                raise ValueError("finish chunk has no parts")
+            return self._text or ""
+
+    class _FakeStreamWithMetaEnd:
+        def __iter__(self):
+            yield _Chunk("Row 1 ")
+            yield _Chunk(raise_val_err=True)
+            yield _Chunk("complete")
+
+    class _FakeBrokenMidStream:
+        def __iter__(self):
+            yield _Chunk("13 EMP-1")
+            raise RuntimeError("mid-stream disconnect")
+
+    call_count = {"n": 0}
+
+    class _FakeModel:
+        def __init__(self, **_kwargs: object) -> None:
+            call_count["n"] += 1
+
+        def start_chat(self, **_kwargs: object):
+            idx = call_count["n"]
+            return types.SimpleNamespace(
+                send_message=lambda *_a, **_k: _FakeStreamWithMetaEnd() if idx == 1 else _FakeBrokenMidStream()
+            )
+
+    fake_genai = types.SimpleNamespace(
+        configure=lambda **_k: None,
+        GenerativeModel=_FakeModel,
+    )
+    fake_google = types.ModuleType("google")
+    fake_google.generativeai = fake_genai  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.generativeai", fake_genai)
+    monkeypatch.setattr(llm.settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(llm.settings, "llm_model", "gemini-flash-lite-latest")
+
+    # 1. Trailing metadata chunk raising ValueError completes without restarting fallback model
+    out = "".join(llm._stream_gemini([{"role": "user", "content": "hi"}]))
+    assert out == "Row 1 complete"
+    assert call_count["n"] == 1
+
+    # 2. Broken mid-stream raises cleanly without invoking second fallback model
+    call_count["n"] = 1  # Next call uses idx=2 broken stream
+    with pytest.raises(RuntimeError, match="mid-stream disconnect"):
+        list(llm._stream_gemini([{"role": "user", "content": "hi"}]))
+    assert call_count["n"] == 2
+
+
+def test_attempt_generation_discards_partial_output_on_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies generate retry discards interrupted partial chunks rather than concatenating answers."""
+    from app.orchestration import nodes  # noqa: PLC0415
+
+    attempts = {"count": 0}
+
+    def flaky_stream(_messages: list[dict[str, str]]):
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            yield "13 | Fatema Shabbir | EMP-1"
+            raise RuntimeError("truncated mid-stream")
+        yield "Clean complete directory response"
+
+    monkeypatch.setattr(nodes, "stream_llm", flaky_stream)
+    chunk = RetrievedChunk("Employee directory data", "mongo:users", "general", "all", 0.9, 0)
+    val_res, retries = nodes._attempt_generation([{"role": "user", "content": "employees"}], [chunk], "employees")
+
+    assert retries == 0
+    assert attempts["count"] == 2
+    assert val_res.cleaned_answer == "Clean complete directory response"
+    assert "EMP-1" not in val_res.cleaned_answer
+
+
+def test_retry_switches_to_fallback_model_cleanly(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies mid-stream failure retry triggers skip_primary=True and skips failing primary model."""
+    import sys
+    import types
+    from app.orchestration import nodes  # noqa: PLC0415
+    from app.rag import llm  # noqa: PLC0415
+
+    seen_models: list[str] = []
+
+    class _Chunk:
+        def __init__(self, text: str) -> None:
+            self.text = text
+
+    class _FakeModel:
+        def __init__(self, model_name: str, **_kwargs: object) -> None:
+            seen_models.append(model_name)
+            self._name = model_name
+
+        def start_chat(self, **_kwargs: object):
+            def _send(*_a: object, **_k: object):
+                if self._name == "gemini-3.5-flash":
+                    yield _Chunk("Partial row 13")
+                    raise RuntimeError("primary stream cut")
+                yield _Chunk("Full clean fallback response")
+
+            return types.SimpleNamespace(send_message=_send)
+
+    fake_genai = types.SimpleNamespace(
+        configure=lambda **_k: None,
+        GenerativeModel=_FakeModel,
+    )
+    fake_google = types.ModuleType("google")
+    fake_google.generativeai = fake_genai  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.generativeai", fake_genai)
+    monkeypatch.setattr(llm.settings, "llm_provider", "gemini")
+    monkeypatch.setattr(llm.settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(llm.settings, "llm_model", "gemini-3.5-flash")
+    monkeypatch.setattr(nodes, "stream_llm", llm.stream_llm)
+
+    answer = nodes._generate_raw_answer([{"role": "user", "content": "list staff"}])
+    assert answer == "Full clean fallback response"
+    assert seen_models == ["gemini-3.5-flash", "gemini-3-flash-preview"]
+
+
+def test_truncated_table_or_abnormal_finish_reason_triggers_clean_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies mid-row table cutoffs (like row 40 '**') and finish_reason=MAX_TOKENS trigger clean fallback."""
+    import sys
+    import types
+    from app.orchestration import nodes  # noqa: PLC0415
+    from app.rag import llm  # noqa: PLC0415
+
+    assert nodes._is_truncated_response("| # | Name |\n|---|---|\n| 40 | **") is True
+    assert nodes._is_truncated_response("| # | Name |\n|---|---|\n| 40 | **Zenab Husain** |") is False
+    assert llm._is_abnormal_gemini_finish(2) is True
+    assert llm._is_abnormal_gemini_finish(1) is False
+
+    seen_models: list[str] = []
+
+    class _FinChunk:
+        def __init__(self, text: str, finish_reason: int | None = None) -> None:
+            self.text = text
+            self.candidates = [types.SimpleNamespace(finish_reason=finish_reason)] if finish_reason is not None else []
+
+    class _FakeModel:
+        def __init__(self, model_name: str, **_kwargs: object) -> None:
+            seen_models.append(model_name)
+            self._name = model_name
+
+        def start_chat(self, **_kwargs: object):
+            def _send(*_a: object, **_k: object):
+                if self._name == "gemini-3.5-flash":
+                    yield _FinChunk("| # | Name |\n|---|---|\n| 40 | **", finish_reason=2)
+                else:
+                    yield _FinChunk("| # | Name |\n|---|---|\n| 40 | **Zenab Husain** |", finish_reason=1)
+
+            return types.SimpleNamespace(send_message=_send)
+
+    fake_genai = types.SimpleNamespace(configure=lambda **_k: None, GenerativeModel=_FakeModel)
+    fake_google = types.ModuleType("google")
+    fake_google.generativeai = fake_genai  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.generativeai", fake_genai)
+    monkeypatch.setattr(llm.settings, "llm_provider", "gemini")
+    monkeypatch.setattr(llm.settings, "gemini_api_key", "test-key")
+    monkeypatch.setattr(llm.settings, "llm_model", "gemini-3.5-flash")
+    monkeypatch.setattr(nodes, "stream_llm", llm.stream_llm)
+
+    answer = nodes._generate_raw_answer([{"role": "user", "content": "all 40 employees"}])
+    assert "| 40 | **Zenab Husain** |" in answer
+    assert seen_models == ["gemini-3.5-flash", "gemini-3-flash-preview"]
+
+
+

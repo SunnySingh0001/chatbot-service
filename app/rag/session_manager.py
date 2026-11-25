@@ -186,6 +186,16 @@ class SessionManager:
         if valid_sid:
             existing = self.get_session(valid_sid, user_id)
             if existing:
+                # Prevent cross-role session history leakage if the user's role changed
+                if existing.get("role") and existing.get("role") != role:
+                    _logger.warning(
+                        "Cross-role session reuse blocked for user=%r: session role=%r vs current=%r",
+                        user_id,
+                        existing.get("role"),
+                        role,
+                    )
+                    new_doc = self.create_session(None, user_id, role)
+                    return str(new_doc["session_id"]), [], None
                 return (
                     str(existing["session_id"]),
                     list(existing.get("messages", [])),
@@ -305,6 +315,125 @@ class SessionManager:
             del _MEMORY_SESSIONS[session_id]
             return True
         return False
+
+    def get_entity_context(self, session_id: str, user_id: str) -> dict[str, Any]:
+        """Returns structured EntityConversationContext saved in session metadata."""
+        rec = self.get_session(session_id, user_id)
+        if not rec:
+            return {}
+        ctx = (rec.get("metadata") or {}).get("entity_context")
+        return dict(ctx) if isinstance(ctx, dict) else {}
+
+    def update_entity_context(
+        self,
+        session_id: str,
+        user_id: str,
+        updates: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Merges and persists structured entity, filter, analytics, and continuation state."""
+        rec = self.get_session(session_id, user_id)
+        if not rec:
+            return {}
+        merged = dict((rec.get("metadata") or {}).get("entity_context") or {})
+        merged.update(updates)
+        now = _get_utc_now_iso()
+        col = self._col_or_fallback()
+        if col is not None:
+            try:
+                col.update_one(
+                    {"session_id": session_id, "user_id": user_id},
+                    {"$set": {"metadata.entity_context": merged, "updated_at": now}},
+                )
+                return merged
+            except Exception as exc:
+                _enforce_production_persistence_check(exc)
+        mem_rec = _MEMORY_SESSIONS.get(session_id)
+        if mem_rec and mem_rec.get("user_id") == user_id:
+            mem_rec.setdefault("metadata", {})["entity_context"] = merged
+            mem_rec["updated_at"] = now
+        return merged
+
+    def list_user_sessions(
+        self,
+        user_id: str,
+        *,
+        search: str | None = None,
+        include_archived: bool = False,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        """Lists sessions owned strictly by user_id with optional keyword and archive filtering."""
+        col = self._col_or_fallback()
+        q_clean = search.strip().lower() if search else ""
+        items: list[dict[str, Any]] = []
+        if col is not None:
+            try:
+                docs = list(col.find({"user_id": user_id}).sort("updated_at", -1).limit(200))
+            except Exception as exc:
+                _enforce_production_persistence_check(exc)
+                docs = [v for v in _MEMORY_SESSIONS.values() if v.get("user_id") == user_id]
+        else:
+            docs = [v for v in _MEMORY_SESSIONS.values() if v.get("user_id") == user_id]
+
+        for doc in docs:
+            if is_session_expired(doc):
+                continue
+            meta = doc.get("metadata") or {}
+            if not include_archived and meta.get("archived"):
+                continue
+            msgs = doc.get("messages") or []
+            title = str(meta.get("title") or (msgs[0].get("content", "")[:60] if msgs else "New Conversation"))
+            if q_clean and q_clean not in title.lower() and not any(q_clean in str(m.get("content", "")).lower() for m in msgs):
+                continue
+            items.append({
+                "session_id": str(doc["session_id"]),
+                "title": title,
+                "role": str(doc.get("role", "")),
+                "pinned": bool(meta.get("pinned", False)),
+                "archived": bool(meta.get("archived", False)),
+                "turn_count": int(meta.get("turn_count", len(msgs))),
+                "created_at": str(doc.get("created_at", "")),
+                "updated_at": str(doc.get("updated_at", "")),
+                "entity_context": meta.get("entity_context") or {},
+            })
+            if len(items) >= limit:
+                break
+        items.sort(key=lambda x: (not x["pinned"], x["updated_at"]), reverse=False)
+        items.sort(key=lambda x: x["pinned"], reverse=True)
+        return items
+
+    def update_session_metadata(
+        self,
+        session_id: str,
+        user_id: str,
+        *,
+        title: str | None = None,
+        pinned: bool | None = None,
+        archived: bool | None = None,
+    ) -> dict[str, Any]:
+        """Updates session title, pin, or archive flags after ownership check."""
+        self.get_session(session_id, user_id)
+        patch: dict[str, Any] = {}
+        if title is not None:
+            patch["metadata.title"] = title.strip()[:120]
+        if pinned is not None:
+            patch["metadata.pinned"] = bool(pinned)
+        if archived is not None:
+            patch["metadata.archived"] = bool(archived)
+        now = _get_utc_now_iso()
+        col = self._col_or_fallback()
+        if col is not None and patch:
+            col.update_one({"session_id": session_id, "user_id": user_id}, {"$set": {**patch, "updated_at": now}})
+        rec = _MEMORY_SESSIONS.get(session_id)
+        if rec and rec.get("user_id") == user_id:
+            meta = rec.setdefault("metadata", {})
+            if title is not None:
+                meta["title"] = title.strip()[:120]
+            if pinned is not None:
+                meta["pinned"] = bool(pinned)
+            if archived is not None:
+                meta["archived"] = bool(archived)
+            rec["updated_at"] = now
+        return self.get_session(session_id, user_id) or {}
 
 
 # Module singleton

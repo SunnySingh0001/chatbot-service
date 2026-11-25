@@ -74,18 +74,38 @@ def check_unauthorized_action_claims(text: str) -> bool:
     return any(p in lower for p in _UNAUTHORIZED_ACTION_PHRASES)
 
 
+_FINANCIAL_CLAIM_RE = re.compile(
+    r"(?:\b(?:revenue|invoices?|gst|cgst|sgst|igst|utgst|mrr|arr|kpi|kpis|target|achievement|score|payout|salary|subtotal|tax|fee|discount|inr)\b|₹|\$|\brs\.?)",
+    re.IGNORECASE,
+)
+_NUMERIC_TOKEN_RE = re.compile(r"\b\d{1,3}(?:,\d{2,3})+(?:\.\d+)?\b|\b\d+(?:\.\d+)?\b")
+
+
+def _normalize_numeric_token(raw: str) -> str:
+    """Strips grouping commas and trailing decimal zeros for consistent comparison."""
+    cleaned = raw.replace(",", "").strip()
+    if "." in cleaned:
+        cleaned = cleaned.rstrip("0").rstrip(".")
+    return cleaned or "0"
+
+
+def _is_high_risk_financial_claim(answer: str, question: str) -> bool:
+    """Detects whether the response or question carries financial, tax, or KPI figures."""
+    return bool(_FINANCIAL_CLAIM_RE.search(f"{question} {answer}"))
+
+
 def check_numerical_grounding(answer: str, retrieved_chunks: list[RetrievedChunk]) -> list[str]:
     """Identifies unsupported numerical quantities in answer that do not appear in retrieved chunks."""
     all_context = " ".join(c.text for c in retrieved_chunks)
-    context_numbers = set(re.findall(r"\b\d+(?:\.\d+)?\b", all_context))
+    context_numbers = {_normalize_numeric_token(n) for n in _NUMERIC_TOKEN_RE.findall(all_context)}
 
     clean_answer = re.sub(r"\[DOC-\d+\]", "", answer)
     clean_answer = re.sub(r"Sources:.*", "", clean_answer, flags=re.IGNORECASE)
     clean_answer = re.sub(r"^\s*\d+\.\s+", "", clean_answer, flags=re.MULTILINE)
 
-    answer_numbers = set(re.findall(r"\b\d+(?:\.\d+)?\b", clean_answer))
+    answer_numbers = {_normalize_numeric_token(n) for n in _NUMERIC_TOKEN_RE.findall(clean_answer)}
     unsupported = [
-        n for n in answer_numbers
+        n for n in sorted(answer_numbers)
         if n not in context_numbers and (len(n) > 1 or (n.isdigit() and int(n) > 3))
     ]
     return unsupported
@@ -141,7 +161,7 @@ def sanitize_answer_citations(
         if inv.startswith("DOC-"):
             cleaned = cleaned.replace(f"[{inv}]", "")
 
-    source_match = re.search(r"(Sources:\s*)(.*)", cleaned, re.IGNORECASE)
+    source_match = re.search(r"(?:\*\*\s*)?(Sources:\s*)(.*)", cleaned, re.IGNORECASE)
     if source_match:
         real_sources = list(dict.fromkeys(c.source for c in retrieved_chunks))
         replacement = f"Sources: {', '.join(real_sources)}"
@@ -198,6 +218,7 @@ def validate_grounded_answer(
         cleaned_answer = sanitize_answer_citations(answer, invalid_cites, retrieved_chunks)
 
     unsupported_nums = check_numerical_grounding(answer, retrieved_chunks)
+    is_fin_risk = bool(unsupported_nums) and _is_high_risk_financial_claim(answer, question)
     if unsupported_nums:
         _logger.warning("Grounding warning: Unsupported numbers %s detected in answer.", unsupported_nums)
         reasons.append(f"unsupported_numerical_claim:{','.join(unsupported_nums)}")
@@ -207,10 +228,10 @@ def validate_grounded_answer(
         valid_cites = list(dict.fromkeys(c.source for c in retrieved_chunks))
 
     return ValidationResult(
-        is_valid=True,
+        is_valid=not is_fin_risk,
         cleaned_answer=cleaned_answer,
         valid_citations=valid_cites,
         invalid_citations=invalid_cites,
         reasons=reasons,
-        should_retry=False,
+        should_retry=is_fin_risk,
     )

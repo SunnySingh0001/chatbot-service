@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.chat import router as chat_router
+from app.api.entities import router as entities_router
 from app.api.health import router as health_router
 from app.api.sync import router as sync_router
 from app.config import settings
@@ -102,6 +103,29 @@ def _validate_orchestrator_on_startup() -> None:
 import asyncio
 
 
+async def _check_and_trigger_startup_sync() -> None:
+    """Verifies collection has indexed chunks on startup; triggers background sync if unpopulated."""
+    import chromadb  # noqa: PLC0415
+    from app.rag.mongo_ingest import sync_mongodb_to_rag  # noqa: PLC0415
+    from app.rag.retriever import get_collection_name  # noqa: PLC0415
+
+    try:
+        client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
+        col_name = get_collection_name(settings.chunking_mode)
+        col = client.get_or_create_collection(name=col_name)
+        if col.count() < 50:
+            import logging
+            logging.getLogger("chatbot.main").info(
+                "Collection %s has %d chunks (< 50); running initial MongoDB sync in background",
+                col_name,
+                col.count(),
+            )
+            await asyncio.to_thread(sync_mongodb_to_rag, purge_legacy=False)
+    except Exception as exc:
+        import logging
+        logging.getLogger("chatbot.main").warning("Startup sync check encountered error: %s", exc)
+
+
 async def _periodic_mongo_sync() -> None:
     """Periodically synchronizes MongoDB Atlas data to ChromaDB every 6 hours."""
     from app.rag.mongo_ingest import sync_mongodb_to_rag  # noqa: PLC0415
@@ -121,6 +145,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Runs startup checks and lifespan management."""
     _validate_orchestrator_on_startup()
     _validate_collection_model_on_startup()
+    asyncio.create_task(_check_and_trigger_startup_sync())
     sync_task = asyncio.create_task(_periodic_mongo_sync())
     try:
         yield
@@ -130,15 +155,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await sync_task
         except asyncio.CancelledError:
             pass
-            pass
 
 
 def create_app() -> FastAPI:
     """Instantiates and configures the FastAPI application."""
     application = FastAPI(
-        title="Internal Employee Chatbot Service",
-        description="RAG-powered internal assistant with role-filtered document access",
-        version="1.0.0",
+        title="Fakhri IT Services Enterprise ERP Chatbot",
+        description="Autonomous Enterprise ERP Copilot grounded in live MongoDB Atlas data with RBAC security",
+        version="2.0.0",
         lifespan=lifespan,
     )
 
@@ -161,6 +185,7 @@ def create_app() -> FastAPI:
     # Mount routes
     application.include_router(health_router)
     application.include_router(chat_router)
+    application.include_router(entities_router)
     application.include_router(sync_router)
 
     return application

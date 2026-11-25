@@ -1,0 +1,132 @@
+/**
+ * Fakhri ERP AI — Enterprise Design System Tokens
+ * Strict color palette, typography hierarchy, elevation, and spacing tokens.
+ */
+
+:root {
+  /* Brand & Neutral Palette */
+  --fkh-bg-canvas: #f8fafc;
+  --fkh-surface-card: #ffffff;
+  --fkh-surface-subtle: #f1f5f9;
+  --fkh-surface-hover: #f8fafc;
+  --fkh-surface-active: #edf2f7;
+
+  /* Text & Content */
+  --fkh-text-primary: #172033;
+  --fkh-text-secondary: #475569;
+  --fkh-text-muted: #5c6b82;
+  --fkh-text-inverse: #ffffff;
+
+  /* Primary Brand Accent (Royal Blue) */
+  --fkh-accent-primary: #2563eb;
+  --fkh-accent-primary-hover: #1d4ed8;
+  --fkh-accent-subtle: #eff6ff;
+  --fkh-accent-border: #bfdbfe;
+
+  /* Gemini-Inspired Light Ambient Aura (Royal Blue + Indigo on #f8fafc) */
+  --fkh-chat-ambient-bg:
+    radial-gradient(ellipse 78% 52% at 50% 6%, rgba(37, 99, 235, 0.14) 0%, rgba(239, 246, 255, 0.78) 40%, rgba(248, 250, 252, 0) 75%),
+    radial-gradient(ellipse 54% 46% at 26% 18%, rgba(79, 70, 229, 0.085) 0%, rgba(99, 102, 241, 0.03) 44%, rgba(248, 250, 252, 0) 72%),
+    radial-gradient(ellipse 68% 44% at 70% 86%, rgba(59, 130, 246, 0.1) 0%, rgba(239, 246, 255, 0.52) 45%, rgba(248, 250, 252, 0) 76%),
+    var(--fkh-bg-canvas);
+  --fkh-chat-hero-glow: 0 0 0 1px var(--fkh-accent-border), 0 8px 24px -6px rgba(37, 99, 235, 0.22);
+  --fkh-chat-composer-shadow: 0 8px 28px -6px rgba(37, 99, 235, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+
+  /* Borders & Dividers */
+  --fkh-border-default: #e2e8f0;
+  --fkh-border-light: #f1f5f9;
+  --fkh-border-focus: #2563eb;
+  --fkh-border-strong: #cbd5e1;
+
+  /* Semantic Feedback Colors */
+  --fkh-success: #059669;
+  --fkh-success-bg: #ecfdf5;
+  --fkh-success-subtle: #ecfdf5;
+  --fkh-success-border: #a7f3d0;
+  --fkh-warning: #d97706;
+  --fkh-warning-bg: #fffbeb;
+  --fkh-warning-border: #fde68a;
+  --fkh-danger: #dc2626;
+  --fkh-danger-hover: #b91c1c;
+  --fkh-danger-bg: #fef2f2;
+  --fkh-danger-subtle: #fef2f2;
+  --fkh-danger-text: #991b1b;
+  --fkh-danger-border: #fecaca;
+  --fkh-info: #0284c7;
+  --fkh-info-bg: #f0f9ff;
+  --fkh-info-border: #bae6fd;
+
+  /* Typography Scale */
+  --fkh-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fkh-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --fkh-text-xs: 0.75rem;
+  /* 12px */
+  --fkh-text-sm: 0.8125rem;
+  /* 13px */
+  --fkh-text-base: 0.875rem;
+  /* 14px */
+  --fkh-text-md: 0.9375rem;
+  /* 15px */
+  --fkh-text-lg: 1rem;
+  /* 16px */
+  --fkh-text-xl: 1.125rem;
+  /* 18px */
+  --fkh-text-2xl: 1.25rem;
+  /* 20px */
+  --fkh-text-3xl: 1.5rem;
+  /* 24px */
+
+  --fkh-leading-tight: 1.25;
+  --fkh-leading-snug: 1.375;
+  --fkh-leading-normal: 1.5;
+  --fkh-leading-relaxed: 1.625;
+
+  /* Spacing Tokens */
+  --fkh-space-1: 0.25rem;
+  /* 4px */
+  --fkh-space-2: 0.5rem;
+  /* 8px */
+  --fkh-space-3: 0.75rem;
+  /* 12px */
+  --fkh-space-4: 1rem;
+  /* 16px */
+  --fkh-space-5: 1.25rem;
+  /* 20px */
+  --fkh-space-6: 1.5rem;
+  /* 24px */
+  --fkh-space-8: 2rem;
+  /* 32px */
+  --fkh-space-10: 2.5rem;
+  /* 40px */
+  --fkh-space-12: 3rem;
+  /* 48px */
+
+  /* Border Radii */
+  --fkh-radius-xs: 4px;
+  --fkh-radius-sm: 6px;
+  --fkh-radius-md: 8px;
+  --fkh-radius-lg: 12px;
+  --fkh-radius-xl: 16px;
+  --fkh-radius-full: 9999px;
+
+  /* Elevation Shadows (Linear / Enterprise SaaS subtle depth) */
+  --fkh-shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --fkh-shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --fkh-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --fkh-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --fkh-shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --fkh-shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+
+  /* Layout Constants */
+  --fkh-sidebar-width: 260px;
+  --fkh-sidebar-collapsed-width: 68px;
+  --fkh-header-height: 56px;
+  --fkh-chat-max-width: 860px;
+  --fkh-drawer-width: 440px;
+
+  /* Transitions */
+  --fkh-transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --fkh-transition-normal: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --fkh-transition-slow: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}

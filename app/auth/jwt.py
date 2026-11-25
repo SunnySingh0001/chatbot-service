@@ -23,8 +23,10 @@ def create_access_token(
     user_id: str,
     role: str,
     expires_delta: timedelta | None = None,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> str:
-    """Encodes a signed HS256 JWT containing user_id and role claims."""
+    """Encodes a signed HS256 JWT containing user_id, role, and optional tenant claims."""
     expire = datetime.now(timezone.utc) + (
         expires_delta or timedelta(minutes=settings.jwt_expire_minutes)
     )
@@ -33,6 +35,10 @@ def create_access_token(
         "role": role,
         "exp": expire,
     }
+    if client_id:
+        payload["client_id"] = client_id
+    if company_id:
+        payload["company_id"] = company_id
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
@@ -70,7 +76,14 @@ def decode_jwt_token(token: str) -> AuthenticatedUser:
             detail="Access forbidden: role is not permitted",
         )
 
-    return AuthenticatedUser(user_id=user_id, role=role)
+    cid = payload.get("client_id")
+    coid = payload.get("company_id")
+    return AuthenticatedUser(
+        user_id=user_id,
+        role=role,
+        client_id=str(cid) if cid else None,
+        company_id=str(coid) if coid else None,
+    )
 
 
 def get_current_user(
@@ -83,5 +96,4 @@ def get_current_user(
             detail="Authentication credentials were not provided",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return decode_jwt_token(credentials.credentials)
     return decode_jwt_token(credentials.credentials)

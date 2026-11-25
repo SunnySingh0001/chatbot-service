@@ -78,19 +78,22 @@ class BM25Index:
         return [self.corpus[idx] for idx, _ in scored[:top_n]]
 
 
-_BM25_CACHE: dict[tuple[str, str], BM25Index] = {}
+_BM25_CACHE: dict[tuple[str, str, str, str], BM25Index] = {}
 
 
 def _fetch_role_chunks(
-    collection_name: str, role: str
+    collection_name: str,
+    role: str,
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> tuple[list[RetrievedChunk], dict[tuple[str, int], list[float]]]:
-    """Queries ChromaDB with role metadata filter to fetch chunks strictly permitted for the role."""
+    """Queries ChromaDB with role, client, and company filters before indexing BM25."""
     import chromadb  # noqa: PLC0415
     from app.config import settings  # noqa: PLC0415
 
     client = chromadb.PersistentClient(path=settings.chroma_persist_dir)
     collection = client.get_collection(name=collection_name)
-    where = _build_where_clause(role)
+    where = _build_where_clause(role, client_id=client_id, company_id=company_id)
     data = collection.get(
         where=where, include=["documents", "metadatas", "embeddings"]
     )
@@ -120,16 +123,23 @@ def _fetch_role_chunks(
     return chunks, embeddings
 
 
-def get_bm25_index(collection_name: str, role: str) -> BM25Index:
-    """Retrieves or constructs the role-isolated BM25 index from ChromaDB."""
+def get_bm25_index(
+    collection_name: str,
+    role: str,
+    client_id: str | None = None,
+    company_id: str | None = None,
+) -> BM25Index:
+    """Retrieves or constructs the role- and tenant-isolated BM25 index from ChromaDB."""
     if role not in ROLE_ACCESS:
         raise PermissionError(f"Access denied: role {role!r} is not recognized")
 
-    key = (collection_name, role)
+    key = (collection_name, role, client_id or "", company_id or "")
     if key in _BM25_CACHE:
         return _BM25_CACHE[key]
 
-    chunks, embeddings = _fetch_role_chunks(collection_name, role)
+    chunks, embeddings = _fetch_role_chunks(
+        collection_name, role, client_id=client_id, company_id=company_id
+    )
     index = BM25Index(corpus=chunks, embeddings=embeddings)
     _BM25_CACHE[key] = index
     return index

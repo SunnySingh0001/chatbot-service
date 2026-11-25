@@ -19,9 +19,14 @@ ALLOWED_TEST_HOSTS: set[str] = {"127.0.0.1", "localhost", "::1"}
 
 
 @pytest.fixture(autouse=True)
-def enforce_test_isolation(monkeypatch: pytest.MonkeyPatch) -> Generator[None, None, None]:
-    """Forces mock mode, test defaults, unsets API keys, and blocks external socket calls."""
+def enforce_test_isolation(
+    monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory
+) -> Generator[None, None, None]:
+    """Forces mock mode, test defaults, isolated sync paths, and blocks external sockets."""
     LLM_NETWORK_CALLS.clear()
+    sync_tmp = tmp_path_factory.mktemp("sync_state")
+    monkeypatch.setenv("SYNC_CHECKPOINT_PATH", str(sync_tmp / "test_sync_checkpoints.json"))
+    monkeypatch.setenv("SYNC_LOCK_PATH", str(sync_tmp / "test_sync.lock"))
     monkeypatch.setattr(settings, "mock_token_delay_ms", 0)
     monkeypatch.setattr(settings, "llm_provider", "mock")
     monkeypatch.setattr(settings, "chunking_mode", "section")

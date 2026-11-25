@@ -19,7 +19,7 @@ from app.orchestration.nodes import (
 from app.orchestration.state import ChatState
 
 DEFAULT_RECURSION_LIMIT: int = 10
-DEFAULT_TIMEOUT_SECONDS: float = 30.0
+DEFAULT_TIMEOUT_SECONDS: float = 60.0
 
 
 def build_chat_graph() -> CompiledStateGraph:

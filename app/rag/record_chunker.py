@@ -24,6 +24,23 @@ def compute_content_hash(text: str) -> str:
     return hashlib.sha256(text.strip().encode("utf-8")).hexdigest()[:16]
 
 
+def _extract_tenant_ids(doc: dict[str, Any], collection_name: str) -> tuple[str | None, str | None]:
+    """Extracts canonical client_id and company_id/workspaceId strings from a MongoDB record."""
+    raw_client = doc.get("clientId") or doc.get("client_id") or doc.get("convertedClientId")
+    if raw_client is None and isinstance(doc.get("client"), dict):
+        raw_client = doc["client"].get("id") or doc["client"].get("_id")
+    if raw_client is None and collection_name == "users" and str(doc.get("role", "")).lower() == "client":
+        raw_client = doc.get("_id")
+
+    raw_company = doc.get("companyId") or doc.get("company_id") or doc.get("workspaceId")
+    if raw_company is None and isinstance(doc.get("client"), dict):
+        raw_company = doc["client"].get("companyId")
+
+    cid = str(normalize_bson_value(raw_client)).strip() if raw_client not in (None, "") else None
+    coid = str(normalize_bson_value(raw_company)).strip() if raw_company not in (None, "") else None
+    return (cid or None), (coid or None)
+
+
 def _build_base_metadata(
     doc: dict[str, Any],
     collection_name: str,
@@ -31,7 +48,7 @@ def _build_base_metadata(
     access_level: str,
     record_id: str,
 ) -> dict[str, str | int]:
-    """Assembles base metadata dictionary from source document timestamps and identifiers."""
+    """Assembles base metadata dictionary from source document timestamps, tenant IDs, and identifiers."""
     meta: dict[str, str | int] = {
         "source": f"mongo:{collection_name}",
         "collection_name": collection_name,
@@ -40,6 +57,11 @@ def _build_base_metadata(
         "department": department,
         "access_level": access_level,
     }
+    client_id, company_id = _extract_tenant_ids(doc, collection_name)
+    if client_id:
+        meta["client_id"] = client_id
+    if company_id:
+        meta["company_id"] = company_id
     if "createdAt" in doc and doc["createdAt"] is not None:
         meta["created_at"] = str(normalize_bson_value(doc["createdAt"]))
     if "updatedAt" in doc and doc["updatedAt"] is not None:

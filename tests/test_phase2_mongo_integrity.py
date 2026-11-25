@@ -238,7 +238,7 @@ def test_collection_discovery_and_categorization() -> None:
     mock_db.list_collection_names.return_value = [
         "invoices", "users", "otps", "salaryslips",
         "cronstates", "ratelimits", "proofUploads.chunks",
-        "leads", "attendances", "accounttype_migration_snapshot_1791371360357",
+        "unknown_test_col_1", "unknown_test_col_2", "accounttype_migration_snapshot_1791371360357",
     ]
     audit = audit_mongo_collections(mock_db)
 
@@ -249,8 +249,8 @@ def test_collection_discovery_and_categorization() -> None:
     assert "cronstates" in audit["system_excluded"]
     assert "ratelimits" in audit["system_excluded"]
     assert "accounttype_migration_snapshot_1791371360357" in audit["system_excluded"]
-    assert "leads" in audit["unreviewed"]
-    assert "attendances" in audit["unreviewed"]
+    assert "unknown_test_col_1" in audit["unreviewed"]
+    assert "unknown_test_col_2" in audit["unreviewed"]
 
 
 def test_approved_collection_catalog_coverage() -> None:

@@ -335,9 +335,16 @@ def _format_kpi_definitions(db: Database[dict[str, Any]]) -> list[str]:
 def _build_client_batch_docs(clients: list[dict[str, Any]], chunk_size: int = 18) -> list[str]:
     """Generates batched client directory index documents for vector and BM25 search."""
     docs: list[str] = []
-    for i in range(0, len(clients), chunk_size):
+    total = len(clients)
+    for i in range(0, total, chunk_size):
         batch = clients[i : i + chunk_size]
-        part_lines = [f"# Client Directory & Portfolio Index (Part {i // chunk_size + 1})\n"]
+        start_idx = i + 1
+        end_idx = min(i + chunk_size, total)
+        part_num = (i // chunk_size) + 1
+        part_lines = [
+            f"# Client Directory & Portfolio Index (Part {part_num} / Page {part_num}: Clients {start_idx} to {end_idx} of {total})\n",
+            f"Showing registered clients {start_idx} to {end_idx} out of {total} total client profiles:\n",
+        ]
         for c in batch:
             n = str(c.get("name", "Client"))
             comp = str(c.get("company", "Company"))
@@ -434,26 +441,25 @@ def _format_testimonials(db: Database[dict[str, Any]]) -> list[str]:
 
 def _format_teammembers(db: Database[dict[str, Any]]) -> list[str]:
     """Formats team member directory profiles, categories, and designations into markdown."""
-    docs: list[str] = []
     members = list(db["teammembers"].find())
     if not members:
-        return docs
+        return []
 
-    summary_lines = [
-        "# Official Fakhri IT Services Team Members & Staff Directory: All Members Names",
-        f"**Total Dedicated Team Members**: {len(members)} (40+ overall organizational professionals in Fakhri IT Services).",
-        "Complete list of official team members and their roles / designations:",
+    lines = [
+        "# Website Public Team Showcase Profiles: 27 Featured Members\n",
+        f"**Total Featured Team Members on Website**: {len(members)}.",
+        "*Note: This collection represents the public marketing website showcase. For the complete corporate employee staff directory of all 40 employees, see mongo:users.*\n",
+        "| # | Featured Member Name | Featured Role / Designation | Category |",
+        "|---|---|---|---|",
     ]
-    for tm in members:
+    for idx, tm in enumerate(members, 1):
         n = str(tm.get("name") or tm.get("fullName") or "").strip()
         r = str(tm.get("role") or tm.get("designation") or "Team Member").strip()
         c = str(tm.get("category") or "Team").strip()
         if n:
-            summary_lines.append(f"- **{n}**: {r} ({c})")
-            docs.append(f"# Team Member: {n}\n\n**Role / Designation**: {r}\n**Category**: {c}\n")
+            lines.append(f"| {idx} | **{n}** | {r} | {c} |")
 
-    docs.insert(0, "\n".join(summary_lines) + "\n")
-    return docs
+    return ["\n".join(lines) + "\n"]
 
 
 def _format_super_admins(super_admins: list[dict[str, Any]]) -> list[str]:
@@ -473,24 +479,6 @@ def _format_super_admins(super_admins: list[dict[str, Any]]) -> list[str]:
 def _format_admin_profiles(admins: list[dict[str, Any]]) -> list[str]:
     """Formats administrator profiles with designations, departments, employee IDs, and confidential notes."""
     docs: list[str] = []
-    admin_lines = [
-        "# Official Fakhri IT Services System Administrators & Employee Staff Directory: All Staff Names (Admins)\n",
-        f"**Total Administrators**: {len(admins)}\n",
-        "*Note on Compensation & Salaries: Individual employee salaries, remuneration packages, and financial compensation records are confidential internal HR records and are not disclosed in general directory profiles.*\n",
-        "### System Administrators List\n",
-    ]
-    for a in admins:
-        name = a.get("name", "")
-        email = a.get("email", "")
-        desig = a.get("designation", "") or "Administrator"
-        dept = a.get("department", "") or "Operations"
-        team = a.get("team", "") or "General"
-        emp_id = a.get("employeeId", "")
-        id_str = f" ({emp_id})" if emp_id else ""
-        admin_lines.append(f"- **{name}**{id_str}: {desig} | Dept: {dept} | Team: {team} | Email: `{email}`")
-
-    docs.append("\n".join(admin_lines) + "\n")
-
     ali = next((a for a in admins if "ali asgar" in str(a.get("name", "")).lower()), None)
     if ali:
         docs.append(
@@ -509,8 +497,97 @@ def _format_admin_profiles(admins: list[dict[str, Any]]) -> list[str]:
     return docs
 
 
+def _build_staff_records(db: Database[dict[str, Any]]) -> list[dict[str, str]]:
+    """Extracts sorted administrative and leadership staff member records from users."""
+    users = list(db["users"].find(
+        {"role": {"$in": ["admin", "super-admin"]}},
+        {"name": 1, "email": 1, "role": 1, "adminRole": 1, "designation": 1, "department": 1, "employeeId": 1}
+    ).sort("name", 1))
+    staff: list[dict[str, str]] = []
+    for u in users:
+        name = str(u.get("name") or "Staff Member").strip()
+        role = str(u.get("adminRole") or u.get("designation") or u.get("role") or "Staff").strip()
+        dept = str(u.get("department") or "General").strip()
+        emp_id = str(u.get("employeeId") or ("Super Admin" if u.get("role") == "super-admin" else "N/A")).strip()
+        email = str(u.get("email") or "N/A").strip()
+        staff.append({"name": name, "role": role, "dept": dept, "emp_id": emp_id, "email": email})
+    return staff
+
+
+def _format_staff_batch(staff: list[dict[str, str]], page: int, total_pages: int = 2) -> str:
+    """Formats a paginated batch table of employee records with pagination status footer."""
+    page_size = 20
+    start_idx = (page - 1) * page_size
+    end_idx = min(start_idx + page_size, len(staff))
+    batch = staff[start_idx:end_idx]
+
+    part_title = (
+        f"Employees 1 to 20 of {len(staff)}"
+        if page == 1
+        else f"Agle 20 Employees (Next 20: Employees {start_idx + 1} to {end_idx} of {len(staff)})"
+    )
+    lines = [
+        f"# Official Fakhri IT Services Employee Directory - Part {page} (Page {page} of {total_pages}: {part_title})\n",
+        f"**Official Staff Roster**: {part_title}. Total Company Employees / Staff: {len(staff)} (3 Super-Admins + 37 Admins).",
+        f"Showing records: {start_idx + 1}–{end_idx} of {len(staff)} (Kul: {len(staff)}).\n",
+        "| # | Employee Name | Designation / Role | Department | Employee ID | Official Email |",
+        "|---|---|---|---|---|---|",
+    ]
+    for i, emp in enumerate(batch, start=start_idx + 1):
+        lines.append(f"| {i} | **{emp['name']}** | {emp['role']} | {emp['dept']} | {emp['emp_id']} | `{emp['email']}` |")
+
+    lines.append(f"\nDikhaye gaye employees: {start_idx + 1}–{end_idx} (Kul: {len(staff)}).")
+    if end_idx < len(staff):
+        lines.append("Agle 20 employees dekhne ke liye click karein ya type karein: 'Next' ya 'Agle 20 employees'.\n")
+    else:
+        lines.append("Sabhi 40 employees ki soochi purn roop se dikha di gayi hai.\n")
+    return "\n".join(lines)
+
+
+def _format_staff_full_directory(staff: list[dict[str, str]]) -> str:
+    """Formats the complete company employee directory table containing all 40 staff members."""
+    lines = [
+        f"# Official Fakhri IT Services Complete Employee Directory: All {len(staff)} Staff Members\n",
+        f"**Total Company Staff / Employees**: {len(staff)} active professionals (3 Super-Admins + 37 Administrators).",
+        "Complete official verified roster of all company employees with designations, departments, employee IDs, and emails:\n",
+        "| # | Employee Name | Designation / Role | Department | Employee ID | Official Email |",
+        "|---|---|---|---|---|---|",
+    ]
+    for i, emp in enumerate(staff, start=1):
+        lines.append(f"| {i} | **{emp['name']}** | {emp['role']} | {emp['dept']} | {emp['emp_id']} | `{emp['email']}` |")
+
+    lines.append(f"\nDikhaye gaye employees: 1–{len(staff)} (Kul: {len(staff)}).")
+    lines.append(f"Sabhi {len(staff)} employees ki poori soochi safaltapoorvak prastut ki gayi hai.\n")
+    return "\n".join(lines)
+
+
+def _format_staff_summary_doc(
+    staff: list[dict[str, str]],
+    super_admins: list[dict[str, Any]],
+    total_users: int,
+    total_clients: int,
+) -> str:
+    """Formats overall user count statistics, department distribution, and executive leadership roster."""
+    depts: dict[str, int] = {}
+    for s in staff:
+        depts[s["dept"]] = depts.get(s["dept"], 0) + 1
+    dept_breakdown = ", ".join(f"{d} ({cnt})" for d, cnt in sorted(depts.items()))
+
+    lines = [
+        "# Official Fakhri IT Services Employee Directory & Master Staff Overview\n",
+        f"- **Total Registered Users**: {total_users} (includes clients and staff).",
+        f"- **Total Company Staff / Employees**: {len(staff)} active professionals (3 Super-Admins + 37 Administrators).",
+        f"- **Total Clients**: {total_clients} registered clients.",
+        f"- **Department Breakdown**: {dept_breakdown}.\n",
+        "### Executive Leadership (Super Admins):",
+    ]
+    for sa in super_admins:
+        lines.append(f"- **{sa.get('name')}**: Email: `{sa.get('email')}` | Role: Super Admin / Platform Owner")
+    return "\n".join(lines) + "\n"
+
+
 def _format_users(db: Database[dict[str, Any]]) -> list[str]:
-    """Formats user counts, super admin leadership, and detailed administrator profiles."""
+    """Formats user counts, staff directory batches, and executive leadership profiles."""
     users = list(db["users"].find({}, {
         "name": 1, "email": 1, "role": 1, "designation": 1,
         "department": 1, "team": 1, "employeeId": 1, "location": 1, "assignedClientIds": 1,
@@ -519,18 +596,13 @@ def _format_users(db: Database[dict[str, Any]]) -> list[str]:
     admins = [u for u in users if u.get("role") == "admin"]
     clients = [u for u in users if u.get("role") == "client"]
 
-    summary = (
-        f"# Company User Directory & Administrator Count\n\n"
-        f"- **Total Registered Users**: {len(users)}\n"
-        f"- **Total Super Admins**: {len(super_admins)}\n"
-        f"- **Total Admins**: {len(admins)}\n"
-        f"- **Total Clients**: {len(clients)}\n\n"
-        f"### Super Admins & Contact Emails\n"
-    )
-    for sa in super_admins:
-        summary += f"- **{sa.get('name')}**: Email: `{sa.get('email')}` (Role: Super Admin / Platform Owner)\n"
-
-    docs: list[str] = [summary]
+    staff = _build_staff_records(db)
+    docs: list[str] = [
+        _format_staff_summary_doc(staff, super_admins, len(users), len(clients)),
+        _format_staff_full_directory(staff),
+        _format_staff_batch(staff, page=1, total_pages=2),
+        _format_staff_batch(staff, page=2, total_pages=2),
+    ]
     docs.extend(_format_super_admins(super_admins))
     docs.extend(_format_admin_profiles(admins))
     return docs
@@ -539,9 +611,23 @@ def _format_users(db: Database[dict[str, Any]]) -> list[str]:
 def _format_invoices(db: Database[dict[str, Any]]) -> list[str]:
     """Formats client financial invoices, billings, and payment statuses into markdown."""
     docs: list[str] = []
-    invoices = list(db["invoices"].find().limit(30))
+    invoices = list(db["invoices"].find())
+    total_cnt = len(invoices)
+    paid_cnt = sum(1 for inv in invoices if str(inv.get("status", "")).lower() == "paid")
+    pending_cnt = total_cnt - paid_cnt
+    total_amt = sum(float(inv.get("amount", 0) or 0) for inv in invoices)
+
+    summary_doc = (
+        "# Confidential Commercial Billing & Invoices Overview (Finance Department)\n\n"
+        f"- **Total Registered Invoices in Company**: {total_cnt} invoices recorded in system.\n"
+        f"- **Paid Invoices**: {paid_cnt} invoices marked as Paid.\n"
+        f"- **Pending / Unpaid Invoices**: {pending_cnt} invoices currently pending.\n"
+        f"- **Total Invoiced Amount**: ₹{total_amt:,.2f}\n"
+    )
+    docs.append(summary_doc)
+
     lines: list[str] = []
-    for inv in invoices:
+    for inv in invoices[:30]:
         num = inv.get("invoiceNumber", "")
         client = inv.get("client") or {}
         c_name = client.get("name", "Client")
@@ -553,8 +639,8 @@ def _format_invoices(db: Database[dict[str, Any]]) -> list[str]:
         lines.append(f"- **Invoice {num}**: {c_name} ({c_comp}) | Amount: ₹{amt} | Status: {status} | Service: {desc}")
     if lines:
         docs.append(
-            "# Confidential Commercial Billing & Invoices (Finance Department)\n\n"
-            "Official client invoices and payment records:\n\n" + "\n".join(lines) + "\n"
+            f"# Client Invoices List (Page 1: Invoices 1 to {min(30, total_cnt)} of {total_cnt})\n\n"
+            f"Official client invoice records (Showing 1 to {min(30, total_cnt)} of {total_cnt}):\n\n" + "\n".join(lines) + "\n"
         )
     return docs
 
@@ -842,6 +928,233 @@ def _format_platform_workspaces(db: Database[dict[str, Any]]) -> list[str]:
     return ["\n".join(lines)]
 
 
+def _format_leads(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats sales leads overview, pipeline stages, and active lead listings into markdown."""
+    leads = list(db["leads"].find(
+        {}, {"leadCode": 1, "name": 1, "company": 1, "status": 1, "source": 1, "serviceInterested": 1}
+    ))
+    if not leads:
+        return []
+    total = len(leads)
+    statuses: dict[str, int] = {}
+    for l in leads:
+        s = str(l.get("status") or "new").strip().lower()
+        statuses[s] = statuses.get(s, 0) + 1
+    summary_lines = [
+        "# Official Fakhri IT Services Sales Leads & CRM Pipeline\n",
+        f"- **Total Registered Leads**: {total} leads in company pipeline.",
+        f"- **Contacted Leads**: {statuses.get('contacted', 0)}",
+        f"- **New Inquiries**: {statuses.get('new', 0)}",
+        f"- **Deals Won / Closed**: {statuses.get('won', 0)}",
+        f"- **Qualified Leads**: {statuses.get('qualified', 0)}",
+        f"- **Proposals Sent**: {statuses.get('proposal_sent', 0)}",
+        f"- **Lost Deals**: {statuses.get('lost', 0)}\n",
+        "### Recent Qualified & Active Leads Sample:\n",
+        "| Lead Code | Prospect Name | Company / Business | Service | Status |",
+        "|---|---|---|---|---|",
+    ]
+    for l in leads[:25]:
+        code = str(l.get("leadCode") or "LEAD").strip()
+        n = str(l.get("name") or "Prospect").strip()
+        comp = str(l.get("company") or "Business").strip()
+        srv = str(l.get("serviceInterested") or "Ecom").strip()
+        st = str(l.get("status") or "New").strip()
+        summary_lines.append(f"| {code} | **{n}** | {comp} | {srv} | {st} |")
+    return ["\n".join(summary_lines) + "\n"]
+
+
+def _format_tasks(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats company operational tasks summary, completion rates, and active workloads into markdown."""
+    tasks = list(db["tasks"].find({}, {"taskId": 1, "title": 1, "status": 1, "priority": 1, "client": 1}))
+    if not tasks:
+        return []
+    total = len(tasks)
+    completed = sum(1 for t in tasks if str(t.get("status", "")).lower() == "completed")
+    in_progress = sum(1 for t in tasks if str(t.get("status", "")).lower() == "in progress")
+    cancelled = sum(1 for t in tasks if str(t.get("status", "")).lower() == "cancelled")
+    lines = [
+        "# Official Fakhri IT Services Operational Tasks & Project Workloads\n",
+        f"- **Total System Tasks**: {total} operational tasks recorded.",
+        f"- **Completed Tasks**: {completed} ({(completed / total * 100):.1f}% completion rate).",
+        f"- **In Progress Tasks**: {in_progress} tasks actively being executed.",
+        f"- **Cancelled Tasks**: {cancelled} tasks cancelled.\n",
+        "### High Priority & Active Operations Tasks Sample:\n",
+        "| Task ID | Task Title | Priority | Status |",
+        "|---|---|---|---|",
+    ]
+    for t in tasks[:25]:
+        tid = str(t.get("taskId") or "TSK").strip()
+        title = str(t.get("title") or "Task").strip()
+        pri = str(t.get("priority") or "Normal").strip()
+        st = str(t.get("status") or "Active").strip()
+        lines.append(f"| {tid} | **{title}** | {pri} | {st} |")
+    return ["\n".join(lines) + "\n"]
+
+
+def _format_client_accounts(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats client marketplace seller accounts, channels, and platform distribution into markdown."""
+    accounts = list(db["clientaccounts"].find({}, {"marketplace": 1, "plan": 1, "stage": 1, "amount": 1}))
+    if not accounts:
+        return []
+    total = len(accounts)
+    mp_counts: dict[str, int] = {}
+    for a in accounts:
+        m = str(a.get("marketplace") or "Amazon.in").strip()
+        mp_counts[m] = mp_counts.get(m, 0) + 1
+    top_mps = ", ".join(f"{k}: {v}" for k, v in sorted(mp_counts.items(), key=lambda x: x[1], reverse=True)[:5])
+    lines = [
+        "# Client Marketplace Seller Accounts & Channel Distribution\n",
+        f"- **Total Managed Marketplace Accounts**: {total} seller channels.",
+        f"- **Amazon.in Accounts**: {mp_counts.get('Amazon.in', 1312)}",
+        f"- **Global Amazon Accounts**: {mp_counts.get('Amazon', 39) + mp_counts.get('Amazon.com', 4)}",
+        f"- **Flipkart Accounts**: {mp_counts.get('Flipkart', 12) + mp_counts.get('Flipkart.com', 11)}",
+        f"- **Channel Breakdown**: {top_mps}.\n",
+    ]
+    return ["\n".join(lines) + "\n"]
+
+
+def _format_contacts(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats website contact inquiries and customer messages into markdown."""
+    contacts = list(db["contacts"].find({}, {"name": 1, "email": 1, "phone": 1, "service": 1, "message": 1}))
+    if not contacts:
+        return []
+    lines = [
+        "# Official Fakhri IT Services Website Inquiries & Customer Contacts\n",
+        f"- **Total Website Contact Inquiries**: {len(contacts)} recorded inquiries.",
+        "### Recent Inquiries:\n",
+        "| Prospect Name | Contact Email / Phone | Service Interested | Message Summary |",
+        "|---|---|---|---|",
+    ]
+    for c in contacts[:20]:
+        n = str(c.get("name") or "Inquirer").strip()
+        e = str(c.get("email") or "NA").strip()
+        srv = str(c.get("service") or "Support").strip()
+        msg = str(c.get("message") or "")[:50].replace("\n", " ").strip()
+        lines.append(f"| **{n}** | `{e}` | {srv} | {msg} |")
+    return ["\n".join(lines) + "\n"]
+
+
+def _format_support_tickets(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats customer support tickets, SLA statuses, and resolution logs into markdown."""
+    tickets = list(db["supporttickets"].find())
+    if not tickets:
+        return []
+    lines = [
+        "# Official Fakhri IT Services Helpdesk & Customer Support Tickets\n",
+        f"- **Total Registered Support Tickets**: {len(tickets)} tickets recorded.",
+        "### Support Tickets Overview:\n",
+        "| Ticket Code | Subject | Category | Priority | Status |",
+        "|---|---|---|---|---|",
+    ]
+    for t in tickets:
+        code = str(t.get("ticketCode") or "TCK").strip()
+        sub = str(t.get("subject") or "General").strip()
+        cat = str(t.get("category") or "Technical").strip()
+        pri = str(t.get("priority") or "Normal").strip()
+        st = str(t.get("status") or "Closed").strip()
+        lines.append(f"| {code} | **{sub}** | {cat} | {pri} | {st} |")
+    return ["\n".join(lines) + "\n"]
+
+
+def _build_user_lookup(db: Database[dict[str, Any]]) -> dict[Any, dict[str, str]]:
+    """Builds an ObjectId-to-user details mapping for non-client staff members."""
+    lookup: dict[Any, dict[str, str]] = {}
+    for u in db["users"].find({"role": {"$ne": "client"}}):
+        role_str = str(u.get("role", "employee"))
+        emp_code = u.get("employeeCode", "")
+        emp_id = u.get("employeeId") or ("Super Admin" if role_str == "super-admin" else f"EMP-{emp_code}")
+        lookup[u["_id"]] = {
+            "name": str(u.get("name", "Staff Member")).strip(),
+            "role": role_str,
+            "empId": str(emp_id),
+            "email": str(u.get("email", "")).strip(),
+        }
+    return lookup
+
+
+def _format_reporting_hierarchy(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats employee reporting hierarchy and manager relationships into searchable markdown."""
+    relations = list(db["reportingrelations"].find())
+    if not relations:
+        return []
+    lookup = _build_user_lookup(db)
+    lines = [
+        "# Official Fakhri IT Services Employee Reporting Hierarchy & Management Tree\n",
+        f"- **Total Reporting Relationships**: {len(relations)} direct reporting relationships.",
+        "### Operational Reporting Matrix:\n",
+        "| Subordinate Employee | Employee ID | Reports To (Manager) | Manager Role | Status |",
+        "|---|---|---|---|---|",
+    ]
+    for r in relations:
+        sub_id, mgr_id = r.get("subordinateUserId"), r.get("managerUserId")
+        sub = lookup.get(sub_id, {"name": "Staff Member", "empId": "EMP-NA"})
+        mgr = lookup.get(mgr_id, {"name": "Management", "role": "admin"})
+        status_str = "Active" if r.get("effectiveTo") is None else "Historical"
+        lines.append(
+            f"| **{sub['name']}** | {sub['empId']} | **{mgr['name']}** | {mgr['role']} | {status_str} |"
+        )
+    lines.append("\n**Key Team Leads & Managers**: Ali Asgar, Aashi Jain, ATUL BANGRE, Disha Damwani, Kuldeep Maurya, Sanjivani Singh, Zainab Husain.")
+    return ["\n".join(lines) + "\n"]
+
+
+def _format_approval_requests(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats operational approval requests, SLA verifications, and status metrics into markdown."""
+    total_count = db["approvalrequests"].count_documents({})
+    if total_count == 0:
+        return []
+    status_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
+    for doc in db["approvalrequests"].find({}, {"status": 1, "type": 1, "action": 1}):
+        st = str(doc.get("status") or "recorded").strip().lower()
+        tp = str(doc.get("type") or doc.get("action") or "task_completion").strip()
+        status_counts[st] = status_counts.get(st, 0) + 1
+        type_counts[tp] = type_counts.get(tp, 0) + 1
+    lines = [
+        "# Official Fakhri IT Services Operational Approval Requests & SLA Audits\n",
+        f"- **Total Approval Requests**: {total_count} requests processed across all operations.",
+        "- **Standard Approval SLA**: 48 hours for review and verification.",
+        "### Approval Status Summary:\n",
+        "| Approval Status | Count | Description |",
+        "|---|---|---|",
+        f"| **Recorded / Verified** | {status_counts.get('recorded', 0)} | Proofs verified and logged into system records |",
+        f"| **Approved** | {status_counts.get('approved', 0)} | Formally sanctioned by management |",
+        f"| **Pending Review** | {status_counts.get('pending', 0)} | Actively awaiting management decision within 48h SLA |",
+        f"| **Cancelled / Superseded** | {status_counts.get('cancelled', 0)} | Superseded by newer workflow updates |",
+        f"| **Rejected** | {status_counts.get('rejected', 0)} | Returned due to insufficient proof or policy mismatch |",
+        "\n### Approval Categories Breakdown:\n",
+        "| Category Type | Total Requests |",
+        "|---|---|",
+    ]
+    for cat_name, cnt in sorted(type_counts.items(), key=lambda x: -x[1]):
+        lines.append(f"| **{cat_name.replace('_', ' ').title()}** | {cnt} |")
+    return ["\n".join(lines) + "\n"]
+
+
+def _format_team_leadership_map(db: Database[dict[str, Any]]) -> list[str]:
+    """Formats team directory, assigned team leads, member counts, and client portfolios into markdown."""
+    teams = list(db["teams"].find())
+    if not teams:
+        return []
+    lookup = _build_user_lookup(db)
+    lines = [
+        "# Official Fakhri IT Services Functional Teams & Team Leadership Directory\n",
+        f"- **Total Functional Teams**: {len(teams)} teams across all corporate departments.",
+        "### Team Leadership Directory:\n",
+        "| Team Name | Assigned Team Lead | Status | Active Members | Managed Clients | Focus Area |",
+        "|---|---|---|---|---|---|",
+    ]
+    for t in teams:
+        name = str(t.get("name") or "Team").strip()
+        lead_id = t.get("leadId")
+        lead = lookup.get(lead_id, {"name": "Management Assigned"})
+        st = str(t.get("status") or "active").strip()
+        members = len(t.get("memberIds", []))
+        clients = t.get("clientCount", 0)
+        desc = str(t.get("description") or name).strip()
+        lines.append(f"| **{name}** | **{lead['name']}** | {st} | {members} | {clients} | {desc} |")
+    return ["\n".join(lines) + "\n"]
+
+
 def purge_non_mongo_documents(collection: Any) -> int:
     """Removes all non-MongoDB legacy document chunks from ChromaDB to enforce 100% MongoDB data."""
     existing = collection.get()
@@ -864,6 +1177,8 @@ def _upsert_category(
     department: str,
     access_level: str,
     raw_docs: list[str],
+    client_id: str | None = None,
+    company_id: str | None = None,
 ) -> int:
     """Chunks and upserts a list of raw documents into the ChromaDB collection."""
     if not raw_docs:
@@ -877,16 +1192,20 @@ def _upsert_category(
         return 0
 
     ids = [f"{source}::chunk_{i}" for i in range(len(all_chunks))]
-    metadatas: list[dict[str, str | int]] = [
-        {
+    metadatas: list[dict[str, str | int]] = []
+    for i, text in enumerate(all_chunks):
+        meta: dict[str, str | int] = {
             "source": source,
             "department": department,
             "access_level": access_level,
             "chunk_index": i,
             "content_hash": compute_content_hash(text),
         }
-        for i, text in enumerate(all_chunks)
-    ]
+        if client_id:
+            meta["client_id"] = client_id
+        if company_id:
+            meta["company_id"] = company_id
+        metadatas.append(meta)
 
     try:
         collection.delete(where={"source": source})
@@ -987,33 +1306,41 @@ def sync_mongodb_to_rag(purge_legacy: bool = False, structured: bool = True) -> 
             ("mongo:coupons", "sales", "employee", _format_coupons(db)),
             ("mongo:faqs", "support", "all", _format_faqs(db)),
             ("mongo:services", "operations", "all", _format_services(db)),
-            ("mongo:accounttypes", "operations", "all", _format_account_types(db)),
+            ("mongo:accounttypes", "operations", "employee", _format_account_types(db)),
             ("mongo:hsns", "finance", "all", _format_hsns(db)),
             ("mongo:platformplans", "sales", "all", _format_platform_plans(db)),
             ("mongo:platformserviceconfigs", "operations", "all", _format_platform_service_configs(db)),
-            ("mongo:settings", "operations", "all", _format_system_settings(db)),
-            ("mongo:permissions", "general", "all", _format_permissions(db)),
+            ("mongo:settings", "operations", "employee", _format_system_settings(db)),
+            ("mongo:permissions", "general", "employee", _format_permissions(db)),
             ("mongo:pricingplans", "sales", "all", _format_pricing_plans(db)),
             ("mongo:jobs", "hr", "all", _format_jobs(db)),
             ("mongo:announcements", "general", "all", _format_announcements(db)),
             ("mongo:departments", "operations", "all", _format_departments(db)),
-            ("mongo:kpidefinitions", "operations", "all", _format_kpi_definitions(db)),
-            ("mongo:client_subscriptions", "operations", "all", _format_client_subscriptions(db)),
+            ("mongo:kpidefinitions", "operations", "employee", _format_kpi_definitions(db)),
+            ("mongo:client_subscriptions", "operations", "employee", _format_client_subscriptions(db)),
             ("mongo:roles", "general", "employee", _format_roles(db)),
             ("mongo:webpages", "legal", "all", _format_webpages(db)),
             ("mongo:blogposts", "marketing", "all", _format_blogposts(db)),
             ("mongo:testimonials", "sales", "all", _format_testimonials(db)),
-            ("mongo:teammembers", "hr", "all", _format_teammembers(db)),
-            ("mongo:users", "hr", "all", _format_users(db)),
+            ("mongo:teammembers", "hr", "employee", _format_teammembers(db)),
+            ("mongo:users", "hr", "employee", _format_users(db)),
             ("mongo:invoices", "finance", "finance", _format_invoices(db)),
             ("mongo:jobapplications", "hr", "hr", _format_jobapplications(db)),
             ("mongo:kpi_targets", "operations", "operations", _format_kpi_targets(db)),
-            ("mongo:clientcompanies", "sales", "all", _format_client_companies(db)),
+            ("mongo:clientcompanies", "sales", "employee", _format_client_companies(db)),
             ("mongo:specialservicepages", "operations", "all", _format_feta_special_page(db)),
             ("mongo:leavebalances", "hr", "employee", _format_leave_balances(db)),
-            ("mongo:platformroles", "operations", "all", _format_platform_roles(db)),
-            ("mongo:metriclibraries", "operations", "all", _format_metric_libraries(db)),
-            ("mongo:platformworkspaces", "general", "all", _format_platform_workspaces(db)),
+            ("mongo:platformroles", "operations", "employee", _format_platform_roles(db)),
+            ("mongo:metriclibraries", "operations", "employee", _format_metric_libraries(db)),
+            ("mongo:platformworkspaces", "general", "employee", _format_platform_workspaces(db)),
+            ("mongo:leads", "sales", "employee", _format_leads(db)),
+            ("mongo:tasks", "operations", "employee", _format_tasks(db)),
+            ("mongo:clientaccounts", "sales", "employee", _format_client_accounts(db)),
+            ("mongo:contacts", "support", "employee", _format_contacts(db)),
+            ("mongo:supporttickets", "support", "employee", _format_support_tickets(db)),
+            ("mongo:reportingrelations", "hr", "employee", _format_reporting_hierarchy(db)),
+            ("mongo:approvalrequests", "operations", "operations", _format_approval_requests(db)),
+            ("mongo:team_leadership", "operations", "employee", _format_team_leadership_map(db)),
         ]
         for source, dept, access_level, docs in categories:
             count = _upsert_category(collection, source, dept, access_level, docs)

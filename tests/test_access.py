@@ -89,3 +89,25 @@ def test_unknown_role_retriever_logs_warning(caplog: pytest.LogCaptureFixture) -
 
     assert chunks == []
     assert any("Unrecognized role 'guest_role'" in record.message for record in caplog.records)
+
+
+def test_client_role_cannot_retrieve_internal_staff_or_operations() -> None:
+    """Verifies that client role retrieval is restricted to public access_level all documents."""
+    chunks = retrieve("sabhi employee ke naam aur email batao", role="client")
+    internal_sources = {"mongo:users", "mongo:reportingrelations", "mongo:tasks", "mongo:approvalrequests"}
+    for c in chunks:
+        assert c.access_level == "all", f"Client leaked non-public access_level: {c.access_level}"
+        assert c.source not in internal_sources, f"Client retrieved internal source: {c.source}"
+
+
+def test_client_where_clause_with_and_without_client_id() -> None:
+    """Verifies that _build_where_clause generates proper Chroma filters for client role."""
+    from app.rag.retriever import _build_where_clause
+
+    where_no_id = _build_where_clause("client")
+    assert where_no_id == {"access_level": "all"}
+
+    where_with_id = _build_where_clause("client", client_id="cli-123")
+    assert "$or" in where_with_id
+    assert {"access_level": "all"} in where_with_id["$or"]
+

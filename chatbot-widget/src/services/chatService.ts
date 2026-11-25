@@ -7,6 +7,7 @@ export interface StreamCallbacks {
   onToken: (token: string) => void;
   onDone: (sources: string[]) => void;
   onError: (errorMessage: string) => void;
+  onSessionId?: (sessionId: string) => void;
 }
 
 /**
@@ -14,12 +15,13 @@ export interface StreamCallbacks {
  */
 export function getFriendlyErrorMessage(statusCode: number): string {
   switch (statusCode) {
+    case 400:
+    case 422:
+      return "Message is too long or invalid.";
     case 401:
       return "Session expired. Please re-authenticate.";
     case 403:
       return "You do not have permission to access this resource.";
-    case 422:
-      return "Message is too long or invalid.";
     case 429:
       return "Too many requests. Please try again later.";
     default:
@@ -55,7 +57,9 @@ export async function streamChatResponse(
   message: string,
   history: BackendChatMessage[],
   callbacks: StreamCallbacks,
-  signal: AbortSignal
+  signal: AbortSignal,
+  sessionId?: string | null,
+  temporary = false
 ): Promise<void> {
   const token = await getToken();
   if (!token || !token.trim()) {
@@ -66,6 +70,13 @@ export async function streamChatResponse(
   const cleanBaseUrl = apiUrl.replace(/\/+$/, "");
   const endpoint = `${cleanBaseUrl}/chat`;
 
+  const requestBody: Record<string, unknown> = { message, history };
+  if (temporary) {
+    requestBody.temporary = true;
+  } else if (sessionId) {
+    requestBody.session_id = sessionId;
+  }
+
   let response: Response;
   try {
     response = await fetch(endpoint, {
@@ -74,7 +85,7 @@ export async function streamChatResponse(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token.trim()}`,
       },
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify(requestBody),
       signal,
     });
   } catch (err: unknown) {
@@ -83,6 +94,11 @@ export async function streamChatResponse(
     }
     callbacks.onError("Unable to connect to the server. Please check your network and try again.");
     return;
+  }
+
+  const headerSid = response.headers.get("X-Session-ID");
+  if (headerSid && callbacks.onSessionId) {
+    callbacks.onSessionId(headerSid);
   }
 
   if (!response.ok) {
@@ -98,11 +114,43 @@ export async function streamChatResponse(
   const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8");
   let buffer = "";
+  let receivedTerminalEvent = false;
+
+  const processPart = (part: string): boolean => {
+    const lines = part.split(/\r?\n/);
+    for (const line of lines) {
+      const event = parseSSELine(line);
+      if (event) {
+        if (event.session_id && callbacks.onSessionId) {
+          callbacks.onSessionId(event.session_id);
+        }
+        if (event.error) {
+          receivedTerminalEvent = true;
+          callbacks.onError(event.message || "An error occurred while streaming the response.");
+          return true;
+        }
+        if (event.token) {
+          callbacks.onToken(event.token);
+        }
+        if (event.done) {
+          receivedTerminalEvent = true;
+          callbacks.onDone(event.sources ?? []);
+        }
+      }
+    }
+    return false;
+  };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
+        buffer += decoder.decode();
+        if (buffer.trim()) {
+          if (processPart(buffer)) {
+            return;
+          }
+        }
         break;
       }
       buffer += decoder.decode(value, { stream: true });
@@ -110,19 +158,14 @@ export async function streamChatResponse(
       buffer = parts.pop() ?? "";
 
       for (const part of parts) {
-        const lines = part.split(/\r?\n/);
-        for (const line of lines) {
-          const event = parseSSELine(line);
-          if (event) {
-            if (event.token) {
-              callbacks.onToken(event.token);
-            }
-            if (event.done) {
-              callbacks.onDone(event.sources ?? []);
-            }
-          }
+        if (processPart(part)) {
+          return;
         }
       }
+    }
+
+    if (!receivedTerminalEvent && !signal.aborted) {
+      callbacks.onError("Response stream ended unexpectedly. Please try again.");
     }
   } catch (err: unknown) {
     if (signal.aborted) {

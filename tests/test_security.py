@@ -145,3 +145,50 @@ def test_401_response_does_not_leak_exception_details(orchestrator_mode: str) ->
     assert detail == "Invalid or expired authentication credentials"
     assert "PyJWTError" not in detail
     assert "DecodeError" not in detail
+
+
+def test_cors_allows_configured_origin_and_blocks_untrusted_origin() -> None:
+    """Verifies CORS allows configured local origins while withholding headers from untrusted origins."""
+    allowed_resp = client.get("/health", headers={"Origin": "http://localhost:3001"})
+    assert allowed_resp.status_code == 200
+    assert allowed_resp.headers.get("access-control-allow-origin") == "http://localhost:3001"
+
+    blocked_resp = client.get("/health", headers={"Origin": "https://evil.example"})
+    assert blocked_resp.status_code == 200
+    assert blocked_resp.headers.get("access-control-allow-origin") is None
+
+
+def test_cors_preflight_rejects_disallowed_delete_method() -> None:
+    """Verifies CORS preflight omits unpermitted HTTP methods like DELETE."""
+    preflight = client.options(
+        "/chat",
+        headers={
+            "Origin": "http://localhost:3001",
+            "Access-Control-Request-Method": "DELETE",
+        },
+    )
+    assert preflight.status_code == 400
+
+
+def test_oversized_chat_message_rejected() -> None:
+    """Verifies that a chat message exceeding 1000 characters is rejected with 422."""
+    token = create_access_token(user_id="emp_sec", role="employee")
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = client.post("/chat", json={"message": "x" * 1005}, headers=headers)
+    assert resp.status_code == 422
+
+
+def test_same_user_cross_role_session_isolated() -> None:
+    """Verifies that role reassignment or switching does not reuse prior-role session history."""
+    from app.rag.session_manager import session_manager, reset_memory_store
+
+    reset_memory_store()
+    sid, _, _ = session_manager.get_or_create_session(None, user_id="atul_bangre", role="super-admin")
+    session_manager.save_user_message(sid, user_id="atul_bangre", content="Confidential founder briefing")
+    session_manager.save_assistant_message(sid, user_id="atul_bangre", content="Confidential data")
+
+    new_sid, msgs, summary = session_manager.get_or_create_session(sid, user_id="atul_bangre", role="employee")
+    assert new_sid != sid
+    assert msgs == []
+    assert summary is None
+

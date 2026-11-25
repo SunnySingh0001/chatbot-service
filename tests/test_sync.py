@@ -44,3 +44,45 @@ def test_sync_allowed_for_admin_or_founder(monkeypatch: pytest.MonkeyPatch) -> N
     data = resp.json()
     assert data["status"] == "ok"
     assert data["total_chunks"] == 160
+
+
+def test_sync_mongodb_alias_allowed_for_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies that admin/founder can trigger sync via /sync/mongodb alias."""
+    def fake_sync(*args, **kwargs) -> int:  # type: ignore[no-untyped-def]
+        return 200
+
+    monkeypatch.setattr("app.api.sync.sync_mongodb_to_rag", fake_sync)
+
+    token = create_access_token("admin_user", "admin")
+    resp = client.post("/sync/mongodb", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert data["total_chunks"] == 200
+
+
+@pytest.mark.anyio
+async def test_check_and_trigger_startup_sync(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verifies that startup check triggers background sync if collection has fewer than 50 chunks."""
+    from app.main import _check_and_trigger_startup_sync
+
+    sync_called: list[bool] = []
+
+    def mock_sync(purge_legacy: bool = False) -> int:
+        sync_called.append(True)
+        return 100
+
+    class MockCollection:
+        def count(self) -> int:
+            return 10
+
+    class MockClient:
+        def get_or_create_collection(self, name: str) -> MockCollection:
+            return MockCollection()
+
+    monkeypatch.setattr("chromadb.PersistentClient", lambda **kwargs: MockClient())
+    monkeypatch.setattr("app.rag.mongo_ingest.sync_mongodb_to_rag", mock_sync)
+
+    await _check_and_trigger_startup_sync()
+    assert len(sync_called) == 1
+

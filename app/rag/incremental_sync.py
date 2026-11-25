@@ -123,15 +123,24 @@ def reconcile_collection_deletions(
     active_cursor = db[spec.name].find({}, {"_id": 1, "recordId": 1, "invoiceNumber": 1, "code": 1})
     active_ids = {extract_record_identifier(doc) for doc in active_cursor if isinstance(doc, dict)}
 
-    if total_count > 0 and len(active_ids) == 0:
+    if total_count > 0 and (len(active_ids) == 0 or len(active_ids) < int(total_count * 0.8)):
         _logger.error(
-            "Safety guard triggered: %s has %d docs in Mongo, but cursor returned 0. Aborting deletion reconciliation.",
+            "Safety guard triggered: %s has %d docs in Mongo, cursor returned %d (<80%%). Aborting deletion.",
             spec.name,
             total_count,
+            len(active_ids),
         )
         return 0, []
 
     deleted_ids = [rid for rid in known_hashes if rid not in active_ids]
+    if len(known_hashes) > 10 and len(deleted_ids) > int(len(known_hashes) * 0.5):
+        _logger.error(
+            "Safety guard triggered: anomalous mass deletion (%d/%d) on %s blocked.",
+            len(deleted_ids),
+            len(known_hashes),
+            spec.name,
+        )
+        return 0, []
     for rid in deleted_ids:
         prune_chunks_for_record(chroma_col, spec.name, rid)
 

@@ -339,3 +339,197 @@ def test_forged_assistant_message_security_employee_role() -> None:
         assert all(c.access_level == "all" for c in chunks)
 
 
+def test_erp_pagination_detection_and_query_builder() -> None:
+    """Verifies that pagination inputs ('Next', 'Agle 20') map directly to active ERP entity queries."""
+    from app.rag.condense import build_erp_pagination_query, is_pagination_query
+
+    assert is_pagination_query("Next") is True
+    assert is_pagination_query("next 20") is True
+    assert is_pagination_query("Agle 20") is True
+    assert is_pagination_query("Aur dikhao") is True
+    assert is_pagination_query("What is leave policy?") is False
+
+    task_q = build_erp_pagination_query("Next", "tasks")
+    assert "operational tasks" in task_q.lower()
+    assert "next" in task_q.lower()
+
+    client_q = build_erp_pagination_query("Agle 20", "clients")
+    assert "client accounts" in client_q.lower()
+    assert "agle 20" in client_q.lower()
+
+
+def test_erp_entity_memory_detection() -> None:
+    """Verifies that active ERP entities (tasks, employees, clients, invoices) are detected from history."""
+    from app.rag.condense import detect_active_erp_entity
+
+    hist_tasks = [{"role": "user", "content": "Pending operational tasks TSK-1024 kitne hain?"}]
+    assert detect_active_erp_entity(hist_tasks) == "tasks"
+
+    hist_emp = [{"role": "user", "content": "Company ke 40 employees aur team directory dikhao"}]
+    assert detect_active_erp_entity(hist_emp) == "employees"
+
+    hist_client = [{"role": "user", "content": "Client accounts aur subscriptions ka data dikhao"}]
+    assert detect_active_erp_entity(hist_client) == "clients"
+
+    hist_inv = [{"role": "user", "content": "GST invoices FISIPL2526IN aur billing status"}]
+    assert detect_active_erp_entity(hist_inv) == "invoices"
+
+
+def test_condense_query_pagination_fast_path() -> None:
+    """Verifies that condense_query rewrites pagination commands with the active ERP entity."""
+    hist_tasks = [{"role": "user", "content": "Pending operational tasks kitne hain?"}]
+    with patch.object(settings, "query_rewrite", True):
+        res = condense_query("Next", history=hist_tasks)
+    assert "operational tasks" in res.lower()
+    assert "next" in res.lower()
+
+
+def test_uppercase_it_department_not_treated_as_pronoun() -> None:
+    """Ensures uppercase 'IT' (Information Technology) does not trigger anaphoric clarification."""
+    from app.rag.condense import is_ambiguous_reference, CLARIFICATION_PROMPT
+
+    assert is_ambiguous_reference("Help me understand internal IT procedures.", history=[]) is False
+    assert is_ambiguous_reference("How do I configure it?", history=[]) is True
+    with patch.object(settings, "query_rewrite", True):
+        res = condense_query("Help me understand internal IT procedures.", history=[])
+    assert res != CLARIFICATION_PROMPT
+
+
+def test_demonstrative_determiner_with_noun_not_ambiguous() -> None:
+    """Ensures demonstrative determiners paired with nouns (e.g. 'this application') are not treated as ambiguous."""
+    from app.rag.condense import is_ambiguous_reference, CLARIFICATION_PROMPT
+
+    assert is_ambiguous_reference("what is kpi as per this application", history=[]) is False
+    assert is_ambiguous_reference("what does this company do", history=[]) is False
+    assert is_ambiguous_reference("are these guidelines mandatory", history=[]) is False
+    with patch.object(settings, "query_rewrite", True):
+        res = condense_query("what is kpi as per this application", history=[])
+    assert res != CLARIFICATION_PROMPT
+
+
+def test_standalone_demonstrative_and_possessive_pronouns_stay_ambiguous() -> None:
+    """Ensures orphan possessive pronouns and standalone demonstratives still require clarification."""
+    from app.rag.condense import is_ambiguous_reference, CLARIFICATION_PROMPT
+
+    assert is_ambiguous_reference("how much its salary", history=[]) is True
+    assert is_ambiguous_reference("what is this?", history=[]) is True
+    assert is_ambiguous_reference("what does this mean?", history=[]) is True
+    assert is_ambiguous_reference("tell me about that", history=[]) is True
+    assert is_ambiguous_reference("how does it work?", history=[]) is True
+    with patch.object(settings, "query_rewrite", True):
+        assert condense_query("how much its salary", history=[]) == CLARIFICATION_PROMPT
+
+
+def test_client_ordered_pagination_resolution() -> None:
+    """Verifies ordered client page resolution for broad lists, follow-ups, and filtered queries."""
+    from app.rag.condense import resolve_client_list_page
+
+    # Broad client listing queries -> Page 1
+    assert resolve_client_list_page("complete client list") == 1
+    assert resolve_client_list_page("clients dikhao") == 1
+    assert resolve_client_list_page("sabhi clients ka list dikhao") == 1
+    assert resolve_client_list_page("clients page 4") == 4
+
+    # Filtered / non-directory client queries MUST NOT trigger ordered pagination override
+    assert resolve_client_list_page("Amazon Kickstart plan ke clients") is None
+    assert resolve_client_list_page("Elite plan clients dikhao") is None
+    assert resolve_client_list_page("MOHD SAMEER client details") is None
+    assert resolve_client_list_page("Which VPN software client must be used?") is None
+
+    # Multi-turn sequential pagination: 1 -> 2 -> 3 (even if assistant mentions DMAX or pending)
+    hist_p1 = [
+        {"role": "user", "content": "complete client list"},
+        {
+            "role": "assistant",
+            "content": (
+                "| 1 | MOHD SAMEER | DMAX | Pending |\n"
+                "| 18 | Client 18 | Sales | Active |\n"
+                "Dikhaye gaye clients: 1–18 (Kul: 1,443)"
+            ),
+        },
+    ]
+    assert resolve_client_list_page("Next", history=hist_p1) == 2
+    assert resolve_client_list_page("Agle clients", history=hist_p1) == 2
+
+    hist_p2 = [
+        *hist_p1,
+        {"role": "user", "content": "Next"},
+        {"role": "assistant", "content": "Showing clients 19 to 36 of 1443..."},
+    ]
+    assert resolve_client_list_page("Aur dikhao", history=hist_p2) == 3
+
+    # Non-client active history must not resolve client page
+    hist_emp = [{"role": "user", "content": "Sabhi 40 employees dikhao"}]
+    assert resolve_client_list_page("Next", history=hist_emp) is None
+
+
+def test_ordered_client_retrieval_and_rbac_isolation() -> None:
+    """Verifies deterministic Chroma page retrieval for authorized roles and strict where-clause denial for clients."""
+    from unittest.mock import MagicMock
+
+    from app.rag.retriever import _retrieve_client_page, retrieve
+
+    # 1. Mock collection test validating Chroma $and where-clause RBAC and title-chunk skipping
+    sample_docs = [
+        ("[Client Directory, Active Subscriptions & Ongoing Metrics Overview]\n\n- **Total Registered Clients**: 1443", {"source": "mongo:client_subscriptions", "department": "operations", "access_level": "employee", "chunk_index": 0}),
+        ("[Client Directory & Portfolio Index (Part 1 / Page 1: Clients 1 to 18 of 1443)]\n\nShowing registered clients 1 to 18:", {"source": "mongo:client_subscriptions", "department": "operations", "access_level": "employee", "chunk_index": 1}),
+        ("[Client Directory & Portfolio Index (Part 1 / Page 1: Clients 1 to 18 of 1443)]\n\n- **MOHD SAMEER** (Plan: Free)", {"source": "mongo:client_subscriptions", "department": "operations", "access_level": "employee", "chunk_index": 2}),
+        ("[Client Directory & Portfolio Index (Part 2 / Page 2: Clients 19 to 36 of 1443)]\n\n- **Murtaza Ali** (Plan: Premium)", {"source": "mongo:client_subscriptions", "department": "operations", "access_level": "employee", "chunk_index": 4}),
+    ]
+
+    mock_col = MagicMock()
+
+    def fake_get(
+        where: dict[str, object] | None = None,
+        include: list[str] | None = None,
+    ) -> dict[str, list[object]]:
+        where_str = str(where or "")
+        if "'employee'" not in where_str and '"employee"' not in where_str:
+            return {"documents": [], "metadatas": []}
+        return {
+            "documents": [d for d, _ in sample_docs],
+            "metadatas": [m for _, m in sample_docs],
+        }
+
+    mock_col.get.side_effect = fake_get
+    p1_mock = _retrieve_client_page(mock_col, {"access_level": {"$in": ["all", "employee"]}}, 1)
+    assert len(p1_mock) == 2
+    assert "Overview" in p1_mock[0].text
+    assert "MOHD SAMEER" in p1_mock[1].text
+
+    p2_mock = _retrieve_client_page(mock_col, {"access_level": {"$in": ["all", "employee"]}}, 2)
+    assert len(p2_mock) == 1
+    assert "Murtaza Ali" in p2_mock[0].text
+
+    denied_mock = _retrieve_client_page(mock_col, {"access_level": "all"}, 1)
+    assert denied_mock == []
+
+    # 2. Live Chroma hierarchical collection verification (production ingestion target)
+    page1 = retrieve("complete client list", role="employee", mode="hierarchical", table_max_rows=50)
+    assert len(page1) == 2
+    assert "Overview" in page1[0].text
+    assert "Part 1 / Page 1" in page1[1].text
+    assert "MOHD SAMEER" in page1[1].text
+
+    hist_p1 = [
+        {"role": "user", "content": "complete client list"},
+        {"role": "assistant", "content": "Dikhaye gaye clients: 1–18 (Kul: 1,443)"},
+    ]
+    page2 = retrieve("Next", role="super-admin", history=hist_p1, mode="hierarchical", table_max_rows=50)
+    assert len(page2) == 1
+    assert "Part 2 / Page 2" in page2[0].text
+    assert "Murtaza Ali" in page2[0].text
+
+    hist_p2 = [
+        *hist_p1,
+        {"role": "user", "content": "Next"},
+        {"role": "assistant", "content": "Dikhaye gaye clients: 19–36 (Kul: 1,443)"},
+    ]
+    page3 = retrieve("Agle clients", role="super-admin", history=hist_p2, mode="hierarchical", table_max_rows=50)
+    assert len(page3) == 1
+    assert "Part 3 / Page 3" in page3[0].text
+
+    # Client role must receive 0 chunks directly from ChromaDB where-clause filtering
+    denied = retrieve("complete client list", role="client", mode="hierarchical", table_max_rows=50)
+    assert denied == []
+

@@ -79,6 +79,7 @@ def _build_response(result: OverallSyncResult) -> SyncResponse:
 
 
 @router.post("/mongo", response_model=SyncResponse)
+@router.post("/mongodb", response_model=SyncResponse)
 def trigger_mongo_sync(
     force_full: bool = Query(default=False, description="Force full re-sync ignoring checkpoints"),
     current_user: AuthenticatedUser = Depends(get_current_user),

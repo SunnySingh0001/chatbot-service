@@ -39,7 +39,7 @@ class Settings(BaseSettings):
             "RAG_SCORE_THRESHOLD_HINDI", "rag_score_threshold_hindi"
         ),
     )
-    rag_top_k: int = Field(default=4, validation_alias=AliasChoices("RAG_TOP_K", "rag_top_k"))
+    rag_top_k: int = Field(default=10, validation_alias=AliasChoices("RAG_TOP_K", "rag_top_k"))
     chroma_persist_dir: str = Field(
         default="./chroma_db", validation_alias=AliasChoices("CHROMA_PERSIST_DIR", "chroma_persist_dir")
     )
@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     max_message_length: int = 1000        # max characters per user question
     max_history_length: int = 10          # max conversation turns accepted
     max_output_tokens: int = 500          # max response tokens generated
+    require_tenant_isolation: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("REQUIRE_TENANT_ISOLATION", "require_tenant_isolation"),
+    )
     session_ttl_hours: int = Field(
         default=24,
         validation_alias=AliasChoices("SESSION_TTL_HOURS", "session_ttl_hours"),

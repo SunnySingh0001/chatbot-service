@@ -15,7 +15,9 @@ class AuthenticatedUser(BaseModel):
     """Represents the verified user identity and role extracted from JWT."""
 
     user_id: str = Field(description="Unique subject / employee ID from the JWT")
-    role: str = Field(description="User role controlling document permissions: employee | hr")
+    role: str = Field(description="User role controlling document permissions: employee | hr | client | admin | super-admin")
+    client_id: str | None = Field(default=None, description="Optional client/customer ID for tenant isolation")
+    company_id: str | None = Field(default=None, description="Optional company ID for tenant isolation")
 
 
 class ChatMessage(BaseModel):
@@ -53,6 +55,10 @@ class ChatRequest(BaseModel):
     session_id: str | None = Field(
         default=None,
         description="Optional server session ID; new session created if omitted",
+    )
+    temporary: bool = Field(
+        default=False,
+        description="When true, executes statelessly without persisting session or messages",
     )
     history: list[ChatMessage] = Field(
         default_factory=list,
